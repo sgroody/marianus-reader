@@ -226,13 +226,22 @@ body.at-home header.top,body.at-home main,body.at-home #pop{display:none!importa
 .home-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--rule)}
 .home-mark{font-family:var(--f-text);font-size:18px;color:var(--cinnabar)}
 .home-mark small{font-family:var(--f-ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-left:8px}
-.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center;padding:56px 0 48px}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center;padding:32px 0 44px}
 @media (max-width:860px){.hero{grid-template-columns:minmax(0,1fr);gap:32px;padding:32px 0}}
 .kicker{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--cinnabar);margin:0 0 14px}
 .hero h1{font-family:var(--f-text);font-weight:400;font-size:clamp(32px,5vw,50px);line-height:1.08;margin:0 0 18px;letter-spacing:-.01em;text-wrap:balance}
 .hero h1 em{color:var(--cinnabar);font-style:italic}
 .lede{font-family:var(--f-text);font-size:19px;line-height:1.55;color:var(--ink);margin:0 0 26px;max-width:36em}
 .cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.gospels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:18px 0 0}
+.gospels button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:9px 11px;cursor:pointer;min-width:0}
+.gospels button:hover{border-color:var(--cinnabar)}
+.gospels .ab{font-family:var(--f-text);font-size:20px;line-height:1.1;color:var(--cinnabar)}
+.gospels .gn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gospels small{font-size:11.5px;color:var(--muted);line-height:1.3}
+@media (max-width:600px){.gospels{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero{padding:20px 0 28px}.hero h1{font-size:30px;margin-bottom:12px}.lede{font-size:16.5px;margin-bottom:18px}.kicker{margin-bottom:10px}
+  .btn{padding:10px 14px}}
 .btn{border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:11px 18px;cursor:pointer;font-size:15px;text-decoration:none;color:var(--ink)}
 .btn:hover{border-color:var(--muted)}
 .btn.primary{background:var(--cinnabar);border-color:var(--cinnabar);color:#fff;font-weight:600}
@@ -462,10 +471,10 @@ function applyDicts(){
 /* ================= state ================= */
 const RU_BROWSER=/^ru|^uk|^be/i.test(navigator.language||"");
 const DEF={book:"MATT",ch:5,script:"cyr",par:{gr:false,syn:false,rfb:false,kjv:false,web:false},gloss:"notes",thr:20,parseIl:false,tab:"parse",view:"both",
-  side:"syn",lang:"ru"};
+  side:"syn",lang:"ru",v:1,seen:false};
 let S=Object.assign({},DEF,{par:Object.assign({},DEF.par)});
 try{const s=JSON.parse(localStorage.getItem("marianus.v2")||"null");if(s){Object.assign(S,s);S.par=Object.assign({},DEF.par,s.par||{});}}catch(e){}
-function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang}))}catch(e){}}
+function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang,v:S.v,seen:S.seen}))}catch(e){}}
 let LEX=null; const B={}; let sel=null; // {kind:'c'|'g', id}
 const IX={tok:{},loc:{},lem:{},kids:{},gtok:{},gloc:{},glem:{},g2c:{}};
 let concFilter=null;
@@ -611,13 +620,14 @@ function go(book,ch,verse,tokId){
 }
 let pendingSel=null;
 async function route(){
-  if(!location.hash||location.hash==="#home"){showHome(true);return}
+  if(!location.hash||location.hash==="#home"){if(!atHome())capturePos();showHome(true);return}
   const fromHome=atHome();showHome(false);
   const m=/^#(MATT|MARK|LUKE|JOHN)-(\d+)(?:-(\d+))?$/.exec(location.hash||"");
   let book=S.book,ch=S.ch,verse=null;
   if(m){book=m[1];ch=Math.min(+m[2],BK[book][3])||1;verse=m[3]?+m[3]:null}
   const changed=book!==S.book||ch!==S.ch||!$("#reader .verse");
-  S.book=book;S.ch=ch;save();syncNav();
+  if(changed||verse)S.v=verse||1;
+  S.book=book;S.ch=ch;S.seen=true;save();syncNav();
   if(!B[book]){$("#reader").innerHTML=`<div class="loading">${T("Загрузка текста…","Loading text…")}</div>`;await loadBook(book)}
   if(changed)renderChapter();
   if(verse){const el=document.getElementById(`v-${verse}`);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600)}}
@@ -1170,6 +1180,20 @@ function openAbout(){
 }
 
 
+/* ================= reading position ================= */
+let posTimer=null;
+// the verse at the middle of the screen: links to a verse centre it, so resuming doesn't drift
+function capturePos(){
+  if(atHome())return;
+  const mid=innerHeight/2+6; // small allowance so a verse edge exactly at mid-screen counts for the next verse
+  for(const el of document.querySelectorAll("#reader .verse")){const r=el.getBoundingClientRect();
+    if(r.bottom>mid){const v=+el.id.slice(2);if(v!==S.v){S.v=v;save()}return}}
+}
+function trackPos(){clearTimeout(posTimer);posTimer=setTimeout(capturePos,250)}
+window.addEventListener("scroll",trackPos,{passive:true});
+window.addEventListener("pagehide",()=>{clearTimeout(posTimer);capturePos()});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")capturePos()});
+
 /* ================= front page ================= */
 const COV={"MATT":[[25,1,25],[23,1,23],[17,1,17],[25,1,25],[48,1,23],[34],[29,4,4],[34],[38,7,7],[42,31,31],[30],[50,42,42],[58],[36],[39],[28],[27],[35],[30],[34],[46],[46],[39,39,39],[51],[46],[75],[66],[20]],"MARK":[[45],[28,28,28],[35],[41],[43],[56],[37],[38],[50],[52],[33],[44],[37],[72],[47],[20]],"LUKE":[[80],[52],[38],[44],[39],[49],[50],[56],[62],[42],[54],[59],[35],[35],[32],[31],[37,37,37],[43],[48],[47],[38],[71],[56],[53]],"JOHN":[[52,1,22],[25],[36],[54],[47],[71],[53,53,53],[59],[41],[42],[57],[50],[38],[31],[27],[33],[26],[40,14,28],[42],[31],[24,18,24]]};
 function setLang(v){
@@ -1227,7 +1251,10 @@ function renderHome(){
   const tot=BOOKS.reduce((a,b)=>a+st[b[0]].tot,0),have=BOOKS.reduce((a,b)=>a+st[b[0]].have,0);
   const fmt=n=>n.toLocaleString(en?"en-US":"ru-RU");
   const pct=(100*have/tot).toFixed(1).replace(".",en?".":",");
-  const resume=!(S.book==="MATT"&&S.ch===5);
+  const resume=!!S.seen;
+  const here=`${bookAbbr(S.book)} ${S.ch}:${S.v||1}`;
+  const GOS=[["MATT",5,24,T("с 5:24","from 5:24")],["MARK",1,null,T("почти полностью","nearly complete")],["LUKE",1,null,T("почти полностью","nearly complete")],["JOHN",1,23,T("с 1:23","from 1:23")]];
+  const picker=`<nav class="gospels" aria-label="${T("Евангелия","Gospels")}">${GOS.map(([c,ch,v,note])=>`<button data-b="${c}" data-c="${ch}"${v?` data-v="${v}"`:""}><span class="ab">${esc(bookAbbr(c))}</span><span class="gn">${esc(T(BK[c][1],BK[c][4]))}</span><small>${note} · ${BK[c][3]} ${T("гл.","ch.")}</small></button>`).join("")}</nav>`;
   const rows=BOOKS.map(b=>{const c=b[0],s=st[c];
     const cells=COV[c].map((r,i)=>{
       const n=r[0];let bg="var(--have)";
@@ -1273,9 +1300,10 @@ function renderHome(){
       <h1>${T("Евангелия по-старославянски, <em>слово за словом</em>","The Gospels in Old Church Slavonic, <em>word by word</em>")}</h1>
       <p class="lede">${T("Текст Мариинского евангелия — одной из древнейших славянских рукописей, — где у каждого слова есть разбор, парадигма, греческий оригинал и конкорданция. Для тех, кто знает русский и учит старославянский.","The text of the Codex Marianus, one of the oldest Slavic manuscripts, with a parse, a paradigm, the Greek original and a concordance behind every word. Built for Russian speakers learning Old Church Slavonic, with a full English interface.")}</p>
       <div class="cta">
-        <button class="btn primary" id="startBtn">${T("Начать с Мф 5:24 →","Start at Matthew 5:24 →")}</button>
-        ${resume?`<button class="btn" id="resumeBtn">${T("Продолжить","Continue at")} ${esc(bookAbbr(S.book))} ${S.ch}</button>`:""}
+        ${resume?`<button class="btn primary" id="resumeBtn">${T("Продолжить с","Continue at")} ${esc(here)} →</button>`:""}
+        <button class="btn${resume?"":" primary"}" id="startBtn">${T("Начать с Мф 5:24","Start at Matthew 5:24")}${resume?"":" →"}</button>
       </div>
+      ${picker}
       <p class="cta-note">${T("Первые листы рукописи утрачены, поэтому текст начинается посреди Нагорной проповеди, с Мф 5:24. Евангелие от Матфея 1:1–5:23 в рукописи не сохранилось.","The manuscript’s first leaves are lost, so it opens in the middle of the Sermon on the Mount, at Matthew 5:24. Matthew 1:1–5:23 does not survive.")}</p>
     </div>
     <figure class="folio" id="folio"></figure>
@@ -1347,9 +1375,9 @@ function renderHome(){
 $("#home").addEventListener("click",e=>{
   const l=e.target.closest("#homeLang button");if(l){setLang(l.dataset.v);return}
   if(e.target.closest("#startBtn,#startBtn2")){go("MATT",5,24);return}
-  if(e.target.closest("#resumeBtn")){go(S.book,S.ch);return}
+  if(e.target.closest("#resumeBtn")){go(S.book,S.ch,S.v>1?S.v:null);return}
   if(e.target.closest("#homeAbout")){e.preventDefault();openAbout();return}
-  const c=e.target.closest(".track button,.gaplist button");
+  const c=e.target.closest(".track button,.gaplist button,.gospels button");
   if(c){go(c.dataset.b,+c.dataset.c,c.dataset.v?+c.dataset.v:null);return}
 });
 
