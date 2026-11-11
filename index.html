@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="The Gospels in Old Church Slavonic (Codex Marianus), word by word: parsing, paradigms, the Greek original and a concordance. Russian and English interface.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23B8321F'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' fill='white' font-family='serif'%3E%E2%B0%B5%3C/text%3E%3C/svg%3E">
+<title>Мариинский чтец</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monomakh&family=Noto+Sans+Glagolitic&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;600&display=swap">
+<style>
+/* Layout (after J. H. Boyer's readers): verse numbers in a left margin, Slavonic and a chosen translation side by side; a click opens a small parse popup, and its buttons slide in the full analysis drawer. */
+:root{
+  --bg:#FAFAF8; --surface:#FFFFFF; --ink:#1F1C19; --muted:#6E6861; --rule:#E2DFD9;
+  --cinnabar:#B8321F; --greek:#2D4F86; --gold:#F6E3B4; --same:#EEF0E6; --al:#DCE6F7;
+  --chip:#F1EFEB;
+  --f-ocs:"Monomakh","Noto Serif","Times New Roman",serif;
+  --f-glag:"Noto Sans Glagolitic","Monomakh",serif;
+  --f-text:"Gentium Book Plus","Noto Serif",Georgia,serif;
+  --f-ui:"Geologica","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16181C; --surface:#1D2025; --ink:#E9E5DD; --muted:#A09A90; --rule:#2E3238;
+  --cinnabar:#F07560; --greek:#9DBAF0; --gold:#4D3E1C; --same:#262B22; --al:#22314A; --chip:#262A30; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16181C; --surface:#1D2025; --ink:#E9E5DD; --muted:#A09A90; --rule:#2E3238;
+  --cinnabar:#F07560; --greek:#9DBAF0; --gold:#4D3E1C; --same:#262B22; --al:#22314A; --chip:#262A30; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+button,select,input{font:inherit;color:inherit}
+a{color:var(--greek)}
+:focus-visible{outline:2px solid var(--cinnabar);outline-offset:2px}
+
+/* ---------- header ---------- */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--rule);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;max-width:1280px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand b{font-family:var(--f-ocs);font-size:24px;font-weight:400;color:var(--cinnabar);letter-spacing:.01em}
+.brand span{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.books{display:flex;gap:4px}
+.books button{border:1px solid var(--rule);background:transparent;border-radius:6px;padding:4px 10px;cursor:pointer}
+.books button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chnav{display:flex;align-items:center;gap:6px}
+.chnav button{border:1px solid var(--rule);background:transparent;border-radius:6px;width:30px;height:30px;cursor:pointer}
+.chnav select{border:1px solid var(--rule);background:var(--surface);border-radius:6px;padding:4px 6px}
+.tools{display:flex;gap:6px}
+.viewsw{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0;max-width:100%}
+@media (max-width:760px){.bar{gap:8px 10px}.viewsw select{max-width:9.5em}.brand b{font-size:21px}}
+.viewsw select{border:1px solid var(--rule);background:var(--surface);border-radius:6px;padding:4px 6px}
+.tools button{border:1px solid var(--rule);background:transparent;border-radius:6px;padding:4px 10px;cursor:pointer}
+.tools button[aria-expanded="true"]{background:var(--chip)}
+
+.settings{max-width:1280px;margin:10px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 24px;
+  border-top:1px solid var(--rule);padding-top:10px}
+.settings fieldset{border:0;margin:0;padding:0;min-width:0}
+.settings legend{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.settings label{display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer}
+.settings small{color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+/* ---------- main ---------- */
+main{max-width:1240px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 80px;transition:padding-right .2s ease}
+article{min-width:0;max-width:46rem;margin:0 auto}
+body.v-both article{max-width:none}
+@media (min-width:1180px){body.desk-open main,body.desk-open header.top{padding-right:max(480px,env(safe-area-inset-right,0px))}}
+h1.chap{font-family:var(--f-ocs);font-weight:400;font-size:30px;margin:4px 0 2px;color:var(--ink);text-wrap:balance}
+h1.chap .num{color:var(--cinnabar)}
+.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.banner{border-left:3px solid var(--cinnabar);background:var(--chip);padding:10px 14px;border-radius:0 6px 6px 0;margin:0 0 18px;font-size:14px}
+.verse{display:grid;grid-template-columns:2.4rem minmax(0,1fr);column-gap:14px;padding:8px 0 12px;border-bottom:1px solid var(--rule);scroll-margin-top:120px}
+.verse > *{grid-column:2}
+.verse > .vg{grid-column:1;grid-row:1 / span 6;text-align:right;padding-top:9px}
+body.v-both .verse{grid-template-columns:2.4rem minmax(0,1.2fr) minmax(0,1fr)}
+body.v-both .verse > .side{grid-column:3;grid-row:1 / span 6}
+.side{font-family:var(--f-text);font-size:16.5px;line-height:1.6;padding-top:5px;border-left:1px solid var(--rule);padding-left:14px}
+.side.gr{color:var(--greek);font-size:17.5px}
+body.v-tr .side{border-left:0;padding-left:0;font-size:18px}
+.colhead{display:none}
+body.v-both .colhead{display:grid;grid-template-columns:2.4rem minmax(0,1.2fr) minmax(0,1fr);column-gap:14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--rule)}
+body.v-both .colhead span:nth-child(3){padding-left:14px}
+.verse:target,.verse.flash{background:linear-gradient(90deg,var(--gold),transparent 70%)}
+.ocs{font-family:var(--f-ocs);font-size:23px;line-height:1.7}
+.script-glag .ocs,.script-glag .pform{font-family:var(--f-glag);font-size:21px}
+.vn{font-family:var(--f-ui);font-size:12.5px;font-weight:600;color:var(--cinnabar);cursor:pointer;user-select:none;font-variant-numeric:tabular-nums}
+.w{cursor:pointer;border-radius:3px;padding:0 1px;transition:background .12s}
+.w:hover{background:var(--chip)}
+.w.same{background:var(--same)}
+.w.sel{background:var(--gold);box-shadow:0 0 0 1px var(--cinnabar) inset}
+.w.al{background:var(--al)}
+.w.rare{text-decoration:underline dotted var(--muted);text-underline-offset:5px}
+.pn{color:var(--cinnabar);font-size:.8em}
+.lac{font-family:var(--f-ui);font-size:13px;color:var(--muted);font-style:italic}
+/* interlinear */
+.il .ocs{line-height:1.25}
+.il .w{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:top;margin:0 6px 10px 0}
+.il .w .gl{font-family:var(--f-ui);font-size:11.5px;line-height:1.2;color:var(--muted);max-width:11em}
+.il .w .pc{font-family:var(--f-ui);font-size:10.5px;line-height:1.2;color:var(--cinnabar)}
+.app{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.5}
+.app b{font-family:var(--f-ocs);font-weight:400;color:var(--ink);font-size:15px}
+.par{font-family:var(--f-text);font-size:15.5px;line-height:1.55;margin-top:4px;display:flex;gap:8px}
+.par .tag{font-family:var(--f-ui);font-size:10.5px;letter-spacing:.06em;color:var(--muted);flex:0 0 2.6em;padding-top:4px;text-transform:uppercase}
+.par .tx{min-width:0}
+.par.gr .tx{color:var(--greek);font-size:17px}
+.g{cursor:pointer;border-radius:3px}
+.g:hover{background:var(--chip)}
+.g.al{background:var(--al)}
+.g.sel{background:var(--gold)}
+
+/* ---------- desk (word panel) ---------- */
+aside.desk{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);display:flex;flex-direction:column;z-index:40;
+  background:var(--surface);border-left:1px solid var(--rule);min-width:0;box-shadow:-8px 0 28px rgba(0,0,0,.12);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px);
+  transform:translateX(105%);transition:transform .2s ease;visibility:hidden}
+aside.desk.open{transform:none;visibility:visible}
+.desk-head{padding:14px 16px 10px;border-bottom:1px solid var(--rule)}
+.desk-head .row{display:flex;align-items:flex-start;gap:8px}
+.pform{font-family:var(--f-ocs);font-size:30px;line-height:1.1;flex:1;min-width:0;overflow-wrap:anywhere}
+.close{border:1px solid var(--rule);background:transparent;border-radius:6px;padding:2px 10px;cursor:pointer}
+/* popup */
+.pop{position:absolute;z-index:35;width:min(360px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.16);padding:12px 14px 12px;font-size:14px}
+.pop .ph{display:flex;align-items:baseline;gap:8px}
+.pop .pf{font-family:var(--f-ocs);font-size:24px;line-height:1.15;flex:1;min-width:0;overflow-wrap:anywhere}
+.script-glag .pop .pf{font-family:var(--f-glag);font-size:21px}
+.pop .pl{color:var(--muted);font-size:13px;margin-top:2px}
+.pop .pl .o{color:var(--ink)}
+.pop .pg{margin:6px 0 8px;font-size:15px}
+.pop .pgk{margin-top:8px;padding-top:8px;border-top:1px solid var(--rule);font-size:13.5px}
+.pop .pn2{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+.pop .pn2 span{font-size:12px;border:1px solid var(--cinnabar);color:var(--cinnabar);border-radius:10px;padding:0 8px}
+.pop .pa{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pop .pa button{font-size:12.5px;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;background:transparent;cursor:pointer}
+.pop .pa button:first-child{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.pop .x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;padding:0 2px}
+.lemline{margin-top:4px;font-size:14px}
+.lemline .lem{font-family:var(--f-ocs);font-size:19px}
+.gloss{margin-top:4px;font-size:15px}
+.ff{color:var(--cinnabar)}
+.tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--rule);overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:9px 10px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--cinnabar)}
+.desk-body{padding:14px 16px 18px;overflow-y:auto;min-height:0}
+.desk-body h3{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px;font-weight:700}
+.desk-body h3:first-child{margin-top:0}
+.feat{display:flex;flex-wrap:wrap;gap:4px}
+.feat span{background:var(--chip);border-radius:4px;padding:2px 7px;font-size:13px}
+.feat span.k{background:transparent;border:1px solid var(--cinnabar);color:var(--cinnabar)}
+.note{border-left:2px solid var(--cinnabar);padding:2px 0 2px 10px;margin:8px 0;font-size:14px}
+.note b.t{display:block;margin-bottom:2px}
+[hidden]{display:none!important}
+.note i{font-family:var(--f-ocs);font-style:normal;font-size:16px}
+.o{font-family:var(--f-ocs);font-size:16px}
+.gk{font-family:var(--f-text);color:var(--greek);font-size:16px}
+.split{font-family:var(--f-ocs);font-size:20px}
+.split .end{color:var(--cinnabar)}
+.syn{font-size:14px}
+.syn li{margin:3px 0}
+.syn ul{padding-left:18px;margin:4px 0}
+.lnk{cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.lnk:hover{text-decoration-color:var(--cinnabar)}
+table.pd{border-collapse:collapse;font-size:13px;margin:4px 0 10px;width:100%}
+table.pd th{font-weight:400;color:var(--muted);text-align:left;padding:3px 6px 3px 0;font-size:12px;white-space:nowrap}
+table.pd td{padding:3px 6px;border-top:1px solid var(--rule);font-family:var(--f-ocs);font-size:16px;vertical-align:top}
+table.pd td.cur{background:var(--gold)}
+table.pd td.empty{color:var(--rule)}
+table.pd sup{font-family:var(--f-ui);font-size:9.5px;color:var(--muted);margin-left:1px}
+.tw{overflow-x:auto}
+.conc{list-style:none;padding:0;margin:0;font-size:13.5px}
+.conc li{padding:5px 0;border-top:1px solid var(--rule);cursor:pointer}
+.conc li:hover{background:var(--chip)}
+.conc .ref{color:var(--cinnabar);font-weight:700;font-size:12px;margin-right:6px;font-variant-numeric:tabular-nums}
+.conc .kw{background:var(--gold);border-radius:2px}
+.conc .ctx{font-family:var(--f-ocs);font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 8px}
+.chips button{border:1px solid var(--rule);background:transparent;border-radius:12px;padding:1px 9px;cursor:pointer;font-family:var(--f-ocs);font-size:15px}
+.chips button[aria-pressed="true"]{border-color:var(--cinnabar);color:var(--cinnabar)}
+.chips button sup{font-family:var(--f-ui);font-size:9.5px;color:var(--muted)}
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:13px;margin:6px 0 10px}
+.bars .b{height:7px;background:var(--cinnabar);border-radius:2px;opacity:.75}
+.bars .n{color:var(--muted);font-variant-numeric:tabular-nums}
+.ext{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ext a,.ext button{font-size:13px;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;text-decoration:none;background:transparent;cursor:pointer;color:var(--ink)}
+.muted{color:var(--muted)}
+.empty-state{color:var(--muted);font-size:14px}
+.empty-state p{margin:0 0 10px}
+.empty-state .o{font-size:20px;color:var(--ink)}
+.loading{color:var(--muted);font-size:14px;padding:40px 0}
+
+/* about dialog */
+dialog{border:1px solid var(--rule);border-radius:10px;background:var(--surface);color:var(--ink);max-width:min(760px,calc(100vw - 32px));max-height:85vh;padding:0}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.dlg{padding:20px 24px 24px;overflow-y:auto;max-height:85vh;font-size:14.5px}
+.dlg h2{font-family:var(--f-ocs);font-weight:400;font-size:26px;margin:0 0 8px;color:var(--cinnabar)}
+.dlg h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+.dlg ul{padding-left:18px;margin:4px 0}
+.dlg li{margin:4px 0}
+.dlg .x{float:right;border:1px solid var(--rule);background:transparent;border-radius:6px;padding:2px 10px;cursor:pointer}
+
+@media (max-width: 760px){
+  body.v-both .verse{grid-template-columns:2rem minmax(0,1fr)}
+  body.v-both .verse > .side{grid-column:2;grid-row:auto;border-left:0;padding-left:0;border-top:1px dashed var(--rule);margin-top:4px}
+  body.v-both .colhead{display:none}
+  .verse{grid-template-columns:2rem minmax(0,1fr);column-gap:8px}
+  aside.desk{top:auto;left:0;width:100%;height:78vh;border-left:0;border-radius:14px 14px 0 0;padding-left:env(safe-area-inset-left,0px);
+    transform:translateY(105%);box-shadow:0 -6px 24px rgba(0,0,0,.18)}
+  .pop{position:fixed;left:8px!important;right:8px;width:auto;top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  .ocs{font-size:21px}
+  .brand span{display:none}
+}
+body.script-lat{--f-ocs:"Gentium Book Plus","Noto Serif",Georgia,serif}
+body.script-lat .ocs{font-size:21px}
+
+/* ---------- front page ---------- */
+:root{--have:#4A5A6E;--gap:#C9442E;--paper:#FBF6EC;--paper-rule:#E8DCC4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--have:#7E93AD;--gap:#F07560;--paper:#221F1A;--paper-rule:#3A342A}}
+:root[data-theme="dark"]{--have:#7E93AD;--gap:#F07560;--paper:#221F1A;--paper-rule:#3A342A}
+body.at-home header.top,body.at-home main,body.at-home #pop{display:none!important}
+.home{max-width:1120px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.home-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.home-mark{font-family:var(--f-text);font-size:18px;color:var(--cinnabar)}
+.home-mark small{font-family:var(--f-ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-left:8px}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center;padding:56px 0 48px}
+@media (max-width:860px){.hero{grid-template-columns:minmax(0,1fr);gap:32px;padding:32px 0}}
+.kicker{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--cinnabar);margin:0 0 14px}
+.hero h1{font-family:var(--f-text);font-weight:400;font-size:clamp(32px,5vw,50px);line-height:1.08;margin:0 0 18px;letter-spacing:-.01em;text-wrap:balance}
+.hero h1 em{color:var(--cinnabar);font-style:italic}
+.lede{font-family:var(--f-text);font-size:19px;line-height:1.55;color:var(--ink);margin:0 0 26px;max-width:36em}
+.cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:11px 18px;cursor:pointer;font-size:15px;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--cinnabar);border-color:var(--cinnabar);color:#fff;font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.cta-note{display:flex;gap:10px;align-items:flex-start;margin:18px 0 0;font-size:14px;color:var(--muted);max-width:34em}
+.cta-note::before{content:"";flex:none;width:8px;height:8px;margin-top:6px;border-radius:2px;background:var(--gap)}
+.folio{margin:0;background:var(--paper);border:1px solid var(--paper-rule);border-radius:4px;padding:30px 30px 22px;box-shadow:0 1px 0 var(--paper-rule),0 14px 34px -22px rgba(60,40,10,.45)}
+.folio .lead-ocs{font-family:"Monomakh",var(--f-text);font-size:30px;line-height:1.45;margin:0 0 18px;color:var(--ink)}
+.folio .lead-ocs .ini{float:left;font-size:74px;line-height:.86;margin:6px 10px 0 0;color:var(--cinnabar)}
+.folio .lead-ocs .gp{color:var(--muted)}
+.folio dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;margin:0;padding-top:14px;border-top:1px solid var(--paper-rule);clear:both}
+.folio dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:4px}
+.folio dd{margin:0;font-family:var(--f-text);font-size:16px;line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.folio dd.glag{font-family:var(--f-glag);font-size:15px;line-height:1.7}
+.folio figcaption{margin-top:16px;font-size:12.5px;color:var(--muted)}
+.h-sec{padding:44px 0;border-top:1px solid var(--rule)}
+.h-sec>h2{font-family:var(--f-text);font-weight:400;font-size:30px;margin:0 0 8px}
+.h-sec>.sub{color:var(--muted);margin:0 0 26px;max-width:46em;font-size:16px}
+.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:40px}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr);gap:24px}}
+.prose p{font-family:var(--f-text);font-size:17.5px;line-height:1.6;margin:0 0 14px}
+.facts{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0;border-top:1px solid var(--rule);align-self:start}
+.facts dt,.facts dd{padding:9px 0;border-bottom:1px solid var(--rule);margin:0}
+.facts dt{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-right:18px}
+.facts dd{font-size:15px}
+.stats{display:flex;flex-wrap:wrap;gap:14px 40px;margin:0 0 26px}
+.stat b{display:block;font-family:var(--f-text);font-weight:400;font-size:40px;line-height:1}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.gapst b{color:var(--gap)}
+.covmap{display:grid;gap:14px}
+.covrow{display:grid;grid-template-columns:9.5em minmax(0,1fr);gap:4px 14px;align-items:center}
+@media (max-width:600px){.covrow{grid-template-columns:minmax(0,1fr)}}
+.covrow .nm{font-size:14px}
+.covrow .nm small{display:block;color:var(--muted);font-size:12px}
+.track{display:flex;gap:2px;height:34px;min-width:0}
+.track button{flex:var(--n) 1 0;min-width:0;border:0;padding:0;cursor:pointer;border-radius:2px;background:var(--have);position:relative}
+.track button:hover,.track button:focus-visible{outline:2px solid var(--ink);outline-offset:1px;z-index:1}
+.track button.first{box-shadow:inset 0 -4px 0 var(--ink)}
+.covleg{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--muted);margin:16px 0 0}
+.covleg i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.gaplist{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 10px}
+.gaplist button{border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13.5px}
+.gaplist button b{color:var(--gap);font-weight:600}
+.gaplist button small{color:var(--muted)}
+.gapnote{font-size:14px;color:var(--muted);max-width:52em;margin:8px 0 0}
+.feat{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+.feat article{padding:22px 22px 24px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:var(--surface)}
+.feat .no{font-size:12px;color:var(--cinnabar);letter-spacing:.08em}
+.feat h3{font-family:var(--f-text);font-weight:700;font-size:19px;margin:6px 0 8px;line-height:1.25}
+.feat p{margin:0;font-size:14.5px;color:var(--ink);line-height:1.5}
+.feat p .hx{font-family:var(--f-text);font-style:italic;font-size:1.06em}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px}
+.steps li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px}
+.steps .n{grid-row:span 2;width:34px;height:34px;border-radius:50%;border:1px solid var(--cinnabar);color:var(--cinnabar);display:grid;place-items:center;font-family:var(--f-text);font-size:18px}
+.steps b{font-weight:600}
+.steps span{color:var(--muted);font-size:14.5px}
+.endcta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--paper);border:1px solid var(--paper-rule);border-radius:6px;padding:22px 24px;margin-top:6px}
+.endcta p{margin:0;font-family:var(--f-text);font-size:19px}
+.home-foot{font-size:13px;color:var(--muted);padding-top:28px;border-top:1px solid var(--rule);line-height:1.6}
+.home-foot a{color:inherit}
+a.brand{text-decoration:none;color:inherit}
+@media (max-width:600px){.home-mark small{display:none}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="home" id="home" hidden></div>
+
+<header class="top">
+  <div class="bar">
+    <a class="brand" href="#home" id="brandLink"><b data-i="brand"></b><span>Codex Marianus · X–XI</span></a>
+    <div class="books" id="books" role="group"></div>
+    <div class="chnav">
+      <button id="prev">‹</button>
+      <select id="chap"></select>
+      <button id="next">›</button>
+    </div>
+    <div class="viewsw">
+      <div class="seg" id="viewSeg" role="group"><button data-v="ocs" data-i="vOcs"></button><button data-v="both" data-i="vBoth"></button><button data-v="tr" data-i="vTr"></button></div>
+      <select id="sideSel"></select>
+    </div>
+    <div class="tools">
+      <div class="seg" id="langSeg" role="group" aria-label="Language / Язык"><button data-v="ru">RU</button><button data-v="en">EN</button></div>
+      <button id="setBtn" aria-expanded="false" aria-controls="settings" data-i="setBtn"></button>
+      <button id="aboutBtn" data-i="aboutBtn"></button>
+    </div>
+  </div>
+  <div class="settings" id="settings" hidden>
+    <fieldset><legend data-i="lgScript"></legend>
+      <div class="seg" id="scriptSeg"><button data-v="cyr" data-i="sCyr"></button><button data-v="glag" data-i="sGlag"></button><button data-v="lat" data-i="sLat"></button></div>
+      <div><small data-i="scriptNote"></small></div>
+    </fieldset>
+    <fieldset><legend data-i="lgLines"></legend>
+      <label><input type="checkbox" id="p-gr"> <span data-i="pGr"></span></label>
+      <label><input type="checkbox" id="p-syn"> <span data-i="pSyn"></span></label>
+      <label><input type="checkbox" id="p-rfb"> <span data-i="pRfb"></span></label>
+      <label><input type="checkbox" id="p-kjv"> King James Version, 1769</label>
+      <label><input type="checkbox" id="p-web"> World English Bible</label>
+    </fieldset>
+    <fieldset><legend data-i="lgHelp"></legend>
+      <div class="seg" id="glossSeg"><button data-v="none" data-i="gNone"></button><button data-v="notes" data-i="gNotes"></button><button data-v="il" data-i="gIl"></button></div>
+      <label style="margin-top:6px"><span data-i="thrA"></span> <input type="number" id="thr" min="1" max="5000" style="width:5em"> <span data-i="thrB"></span></label>
+      <label><input type="checkbox" id="parseIl"> <span data-i="parseIl"></span></label>
+    </fieldset>
+  </div>
+</header>
+
+<div class="pop" id="pop" hidden role="dialog"></div>
+<main id="main">
+  <article id="reader"><div class="loading">…</div></article>
+  <aside class="desk" id="desk">
+    <div class="desk-head" id="deskHead"></div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="desk-body" id="deskBody"></div>
+  </aside>
+</main>
+
+<dialog id="about"><div class="dlg" id="aboutBody"></div></dialog>
+
+<script>
+"use strict";
+/* ================= language ================= */
+const T=(ru,en)=>S.lang==="en"?en:ru;
+const UI={
+ brand:["Мариинское евангелие","Marianus Reader"],
+ vOcs:["Слав.","Slavonic"],vBoth:["Оба","Both"],vTr:["Перевод","Translation"],
+ setBtn:["Вид","View"],aboutBtn:["Источники","Sources"],
+ lgScript:["Письмо","Script"],sCyr:["Кириллица","Cyrillic"],sGlag:["Глаголица","Glagolitic"],sLat:["Латиница","Latin"],
+ scriptNote:["Глаголица и латиница — автоматическая транслитерация; рукопись написана глаголицей.","Glagolitic and Latin are automatic transliterations. The manuscript itself is in Glagolitic. In English mode, Latin also transliterates the Cyrillic examples in notes."],
+ lgLines:["Строки под стихом","Extra lines under each verse"],
+ pGr:["Греческий (Тишендорф, PROIEL)","Greek (Tischendorf, PROIEL)"],
+ pSyn:["Синодальный перевод, 1876","Russian Synodal, 1876"],
+ pRfb:["«Библия свободы» (совр., черновик)","Russian Freedom Bible (modern, draft)"],
+ lgHelp:["Помощь при чтении","Reading help"],
+ gNone:["Без глосс","No glosses"],gNotes:["Сноски","Footnotes"],gIl:["Подстрочник","Interlinear"],
+ thrA:["Глоссировать слова, встречающиеся ≤","Gloss words occurring ≤"],thrB:["раз","times"],
+ parseIl:["Грамматический разбор под словом (в подстрочнике)","Show parsing under each word (interlinear mode)"],
+};
+function applyStatic(){
+  document.documentElement.lang=S.lang;document.title=T("Мариинский чтец","Marianus Reader");
+  document.querySelectorAll("[data-i]").forEach(el=>{const k=el.dataset.i;if(UI[k])el.textContent=T(UI[k][0],UI[k][1])});
+  $("#prev").setAttribute("aria-label",T("Предыдущая глава","Previous chapter"));
+  $("#next").setAttribute("aria-label",T("Следующая глава","Next chapter"));
+  $("#chap").setAttribute("aria-label",T("Глава","Chapter"));
+  $("#desk").setAttribute("aria-label",T("Разбор слова","Word analysis"));
+  $("#sideSel").setAttribute("aria-label",T("Перевод для параллельной колонки","Translation for the parallel column"));
+  $("#sideSel").innerHTML=SIDE_KEYS.map(k=>`<option value="${k}">${esc(sideName(k,true))}</option>`).join("");
+}
+
+/* ================= constants ================= */
+// [code, ru name, ru abbr, chapters, en name, en abbr]
+const BOOKS=[["MATT","от Матфея","Мф",28,"Matthew","Mt"],["MARK","от Марка","Мк",16,"Mark","Mk"],["LUKE","от Луки","Лк",24,"Luke","Lk"],["JOHN","от Иоанна","Ин",21,"John","Jn"]];
+const BK=Object.fromEntries(BOOKS.map(b=>[b[0],b]));
+const bookName=c=>T("Евангелие "+BK[c][1],"Gospel of "+BK[c][4]);
+const bookAbbr=c=>T(BK[c][2],BK[c][5]);
+const PAR_KEYS=["gr","syn","rfb","kjv","web"];
+const PAR_TAG={gr:["Гр","Gk"],syn:["СП","Syn"],rfb:["БС","RFB"],kjv:["KJV","KJV"],web:["WEB","WEB"]};
+const SIDE_KEYS=["syn","rfb","gr","kjv","web"];
+function sideName(k,short){
+  const N={syn:["Синодальный перевод","Russian Synodal (1876)"],rfb:["Библия свободы","Russian Freedom Bible"],gr:["Греческий (Тишендорф)","Greek (Tischendorf)"],kjv:["King James Version","King James Version"],web:["World English Bible","World English Bible"]};
+  const Sh={syn:["Синодальный","Russian Synodal"],rfb:["Библия свободы","Russian Freedom Bible"],gr:["Греческий","Greek"],kjv:["KJV","KJV"],web:["WEB","WEB"]};
+  const x=(short?Sh:N)[k];return T(x[0],x[1]);
+}
+const POS_RU={"A-":"прилагательное","Df":"наречие / частица","S-":"артикль","Ma":"количественное числительное","Nb":"существительное","C-":"сочинительный союз",
+ "Pd":"указательное местоимение","F-":"иноязычное слово","Px":"неопределённое местоимение","N-":"частица инфинитива","I-":"междометие","Du":"вопросительное наречие",
+ "Pi":"вопросительное местоимение","Mo":"порядковое числительное","Pp":"личное местоимение","Pk":"возвратное местоимение","Ps":"притяжательное местоимение",
+ "Pt":"возвратно-притяжательное местоимение","R-":"предлог","Ne":"имя собственное","Py":"квантор","Pc":"взаимное местоимение","Dq":"относительное наречие",
+ "Pr":"относительное местоимение","G-":"подчинительный союз","V-":"глагол","X-":"—"};
+const POS_EN={"A-":"adjective","Df":"adverb / particle","S-":"article","Ma":"cardinal numeral","Nb":"noun","C-":"coordinating conjunction",
+ "Pd":"demonstrative pronoun","F-":"foreign word","Px":"indefinite pronoun","N-":"infinitive marker","I-":"interjection","Du":"interrogative adverb",
+ "Pi":"interrogative pronoun","Mo":"ordinal numeral","Pp":"personal pronoun","Pk":"reflexive pronoun","Ps":"possessive pronoun",
+ "Pt":"reflexive possessive pronoun","R-":"preposition","Ne":"proper noun","Py":"quantifier","Pc":"reciprocal pronoun","Dq":"relative adverb",
+ "Pr":"relative pronoun","G-":"subordinating conjunction","V-":"verb","X-":"—"};
+const M_RU=[
+ {"1":"1-е лицо","2":"2-е лицо","3":"3-е лицо"},
+ {"s":"ед. число","d":"двойств. число","p":"мн. число"},
+ {"p":"настоящее","i":"имперфект","r":"перфект","s":"результатив (л-форма)","a":"аорист","u":"прошедшее","l":"плюсквамперфект","f":"будущее","t":"будущее сложное"},
+ {"i":"изъявит.","s":"сослагат.","m":"повелит.","o":"желат. (оптатив)","n":"инфинитив","p":"причастие","d":"герундий","g":"герундив","u":"супин"},
+ {"a":"действ. залог","m":"средний залог","p":"страдат. залог","e":"средне-страдат."},
+ {"m":"муж. род","f":"жен. род","n":"ср. род","p":"м./ж.","o":"м./ср.","r":"ж./ср.","q":"любой род"},
+ {"n":"именит.","a":"винит.","o":"косвенный","g":"родит.","c":"род./дат.","e":"вин./дат.","d":"дат.","b":"аблатив","i":"творит.","l":"местный","v":"звательный"},
+ {"p":"","c":"сравнит. степень","s":"превосх. степень"},
+ {"w":"полная (местоим.) форма","s":"краткая (именная) форма","t":"кратк./полн."},
+];
+const M_EN=[
+ {"1":"1st person","2":"2nd person","3":"3rd person"},
+ {"s":"singular","d":"dual","p":"plural"},
+ {"p":"present","i":"imperfect","r":"perfect","s":"resultative (l-form)","a":"aorist","u":"past","l":"pluperfect","f":"future","t":"future perfect"},
+ {"i":"indicative","s":"subjunctive","m":"imperative","o":"optative","n":"infinitive","p":"participle","d":"gerund","g":"gerundive","u":"supine"},
+ {"a":"active","m":"middle","p":"passive","e":"middle/passive"},
+ {"m":"masculine","f":"feminine","n":"neuter","p":"masc./fem.","o":"masc./neut.","r":"fem./neut.","q":"any gender"},
+ {"n":"nominative","a":"accusative","o":"oblique","g":"genitive","c":"gen./dat.","e":"acc./dat.","d":"dative","b":"ablative","i":"instrumental","l":"locative","v":"vocative"},
+ {"p":"","c":"comparative","s":"superlative"},
+ {"w":"long (definite) form","s":"short (nominal) form","t":"short/long"},
+];
+const CASE_ORDER=["n","g","d","a","i","l","v"];
+const CASE_SHORT_RU={n:"И.",g:"Р.",d:"Д.",a:"В.",i:"Т.",l:"М.",v:"Зв.",c:"Р./Д.",e:"В./Д.",o:"косв."};
+const CASE_SHORT_EN={n:"Nom",g:"Gen",d:"Dat",a:"Acc",i:"Ins",l:"Loc",v:"Voc",c:"Gen/Dat",e:"Acc/Dat",o:"Obl"};
+const NUM_SHORT_RU={s:"ед.",d:"дв.",p:"мн."},NUM_SHORT_EN={s:"sg",d:"du",p:"pl"};
+const GEN_SHORT_RU={m:"м.",f:"ж.",n:"ср.",p:"м./ж.",o:"м./ср.",r:"ж./ср.",q:"—"},GEN_SHORT_EN={m:"m",f:"f",n:"n",p:"m/f",o:"m/n",r:"f/n",q:"—"};
+const REL_RU={pred:"сказуемое",sub:"подлежащее",obj:"прямое дополнение",obl:"косвенное дополнение (аргумент, часто с предлогом)",
+ adv:"обстоятельство",xadv:"предикативное обстоятельство (≈ деепричастный оборот)",atr:"определение",apos:"приложение",
+ aux:"служебное слово (частица, предлог, союз-связка)",comp:"придаточное-дополнение",ag:"агенс (кем? при страдат. залоге)",
+ narg:"дополнение при имени",part:"партитив (часть от целого)",voc:"обращение",xobj:"предикативное дополнение (открытый комплемент)",
+ parpred:"вводная предикация",expl:"формальное слово-заместитель",arg:"аргумент",nonsub:"не-подлежащее",per:"периферийный член",rel:"определение/приложение",adnom:"приименной член"};
+const REL_EN={pred:"predicate",sub:"subject",obj:"direct object",obl:"oblique argument (often with a preposition)",
+ adv:"adverbial",xadv:"open adverbial (≈ participial phrase)",atr:"attribute (modifier)",apos:"apposition",
+ aux:"auxiliary word (particle, preposition, connective)",comp:"complement clause",ag:"agent (by whom, with a passive)",
+ narg:"argument of a noun",part:"partitive (part of a whole)",voc:"address (vocative)",xobj:"open object complement",
+ parpred:"parenthetical clause",expl:"expletive (dummy word)",arg:"argument",nonsub:"non-subject",per:"peripheral element",rel:"attribute/apposition",adnom:"adnominal element"};
+const EMPTY_RU={V:"опущенный глагол (∅)",C:"бессоюзное сочинение (∅)",P:"опущенное местоимение (∅)"};
+const EMPTY_EN={V:"omitted verb (∅)",C:"coordination without a conjunction (∅)",P:"omitted pronoun (∅)"};
+const PREP_CASE_RU={"въ":"В. (куда) / М. (где)","на":"В. (куда) / М. (где)","отъ":"Р.","из":"Р.","къ":"Д.","съ":"Т. (с кем) / Р. (откуда)","о":"М. / В.",
+ "по":"Д. / М. / В.","прѣдъ":"Т. / В.","за":"В. / Т.","до":"Р.","при":"М.","оу":"Р.","надъ":"Т. / В.","подъ":"Т. / В.","без":"Р.","ради":"Р. (послелог)",
+ "сквозѣ":"В.","близъ":"Р.","междоу":"Т.","прѣжде":"Р.","развѣ":"Р."};
+const PREP_CASE_EN={"въ":"Acc (into) / Loc (in)","на":"Acc (onto) / Loc (on)","отъ":"Gen","из":"Gen","къ":"Dat","съ":"Ins (with) / Gen (down from)","о":"Loc / Acc",
+ "по":"Dat / Loc / Acc","прѣдъ":"Ins / Acc","за":"Acc / Ins","до":"Gen","при":"Loc","оу":"Gen","надъ":"Ins / Acc","подъ":"Ins / Acc","без":"Gen","ради":"Gen (postposition)",
+ "сквозѣ":"Acc","близъ":"Gen","междоу":"Ins","прѣжде":"Gen","развѣ":"Gen"};
+let POS,M,CASE_SHORT,NUM_SHORT,GEN_SHORT,REL,EMPTY,PREP_CASE;
+function applyDicts(){
+  const en=S.lang==="en";
+  POS=en?POS_EN:POS_RU;M=en?M_EN:M_RU;CASE_SHORT=en?CASE_SHORT_EN:CASE_SHORT_RU;NUM_SHORT=en?NUM_SHORT_EN:NUM_SHORT_RU;
+  GEN_SHORT=en?GEN_SHORT_EN:GEN_SHORT_RU;REL=en?REL_EN:REL_RU;EMPTY=en?EMPTY_EN:EMPTY_RU;PREP_CASE=en?PREP_CASE_EN:PREP_CASE_RU;
+}
+
+/* ================= state ================= */
+const RU_BROWSER=/^ru|^uk|^be/i.test(navigator.language||"");
+const DEF={book:"MATT",ch:5,script:"cyr",par:{gr:false,syn:false,rfb:false,kjv:false,web:false},gloss:"notes",thr:20,parseIl:false,tab:"parse",view:"both",
+  side:RU_BROWSER?"syn":"web",lang:RU_BROWSER?"ru":"en"};
+let S=Object.assign({},DEF,{par:Object.assign({},DEF.par)});
+try{const s=JSON.parse(localStorage.getItem("marianus.v2")||"null");if(s){Object.assign(S,s);S.par=Object.assign({},DEF.par,s.par||{});}}catch(e){}
+function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang}))}catch(e){}}
+let LEX=null; const B={}; let sel=null; // {kind:'c'|'g', id}
+const IX={tok:{},loc:{},lem:{},kids:{},gtok:{},gloc:{},glem:{},g2c:{}};
+let concFilter=null;
+
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clean=l=>String(l||"").replace(/#\d+$/,"");
+const GL={"а":"ⰰ","б":"ⰱ","в":"ⰲ","г":"ⰳ","д":"ⰴ","е":"ⰵ","ѥ":"ⰵ","є":"ⰵ","ж":"ⰶ","ѕ":"ⰷ","з":"ⰸ","и":"ⰻ","і":"ⰹ","ꙇ":"ⰹ","ї":"ⰹ","ꙉ":"ⰼ","ћ":"ⰼ","к":"ⰽ","л":"ⰾ","м":"ⰿ","н":"ⱀ","о":"ⱁ",
+ "п":"ⱂ","р":"ⱃ","с":"ⱄ","т":"ⱅ","у":"ⱆ","ф":"ⱇ","х":"ⱈ","ѡ":"ⱉ","щ":"ⱋ","ц":"ⱌ","ч":"ⱍ","ш":"ⱎ","ъ":"ⱏ","ь":"ⱐ","ѣ":"ⱑ","ꙗ":"ⱑ","ю":"ⱓ","ѧ":"ⱔ","ѩ":"ⱗ","ѫ":"ⱘ","ѭ":"ⱙ","ꙙ":"ⱔ","ѳ":"ⱚ","ѵ":"ⱛ","ы":"ⱏⰹ","ꙑ":"ⱏⰹ","ꙿ":"ⱏ"};
+// scholarly Latin transliteration (Slavist convention)
+const LT={"а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"ë","є":"e","ѥ":"je","ж":"ž","з":"z","ѕ":"dz","и":"i","і":"i","ї":"i","ꙇ":"i","й":"j","к":"k","л":"l","м":"m","н":"n","о":"o",
+ "п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"ch","ц":"c","ч":"č","ш":"š","щ":"št","ъ":"ŭ","ы":"y","ꙑ":"y","ь":"ĭ","ѣ":"ě","э":"è","ю":"ju","я":"ja","ꙗ":"ja",
+ "ѧ":"ę","ѩ":"ję","ѫ":"ǫ","ѭ":"jǫ","ꙙ":"ę","ѳ":"th","ѵ":"ü","ѡ":"ō","ꙉ":"ǵ","ћ":"ć","ꙿ":"ŭ"};
+const SUPL={"ⷠ":"б","ⷡ":"в","ⷢ":"г","ⷣ":"д","ⷤ":"ж","ⷥ":"з","ⷦ":"к","ⷧ":"л","ⷨ":"м","ⷩ":"н","ⷪ":"о","ⷫ":"п","ⷬ":"р","ⷭ":"с","ⷮ":"т","ⷯ":"х","ⷰ":"ц","ⷱ":"ч","ⷲ":"ш","ⷳ":"щ","ⷴ":"ф","ⷵ":"ст","ⷶ":"а","ⷷ":"е","ⷸ":"ꙉ","ⷹ":"оу","ⷺ":"ѣ","ⷻ":"ю","ⷼ":"ꙗ","ⷽ":"ѧ","ⷾ":"ѫ","ⷿ":"ѩ"};
+const HAS_CYR=/[Ѐ-ӿꙀ-ꚟⷠ-ⷿ]/;
+function latin(s){
+  if(!s||!HAS_CYR.test(s))return s;
+  s=s.replace(/[ⷠ-ⷿ]/g,c=>SUPL[c]||"").replace(/[҃-҉]/g,"").replace(/оу|ѹ|ꙋ/g,"u").replace(/ОУ|Оу|Ѹ|Ꙋ/g,"U");
+  let o="";for(const c of s){const lc=c.toLowerCase();const v=LT[lc];if(v==null){o+=c;continue}o+=(c!==lc&&v)?v[0].toUpperCase()+v.slice(1):v}
+  return o;
+}
+function scr(s){
+  if(!s)return s;
+  if(S.script==="lat")return latin(s);
+  if(S.script!=="glag")return s;
+  s=s.toLowerCase().replace(/оу|ѹ|ꙋ/g,"ⱆ");
+  let o="";for(const c of s)o+=GL[c]||c;return o;
+}
+// In English + Latin mode, transliterate any Cyrillic left in UI text (examples in notes etc.), but never the translation columns.
+function latinTree(root){
+  if(!(S.lang==="en"&&S.script==="lat")||!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&n.parentElement.closest(".side,.par")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const ns=[];while(w.nextNode())ns.push(w.currentNode);
+  for(const n of ns)if(HAS_CYR.test(n.nodeValue))n.nodeValue=latin(n.nodeValue);
+}
+function tokOf(id){return IX.tok[id]}
+function ref(loc){return loc?`${bookAbbr(loc[0])} ${loc[1]}:${loc[2]}`:""}
+function ruGloss(li){const r=LEX.cl[li];return r&&r[2]?r[2]:""}
+function grEq(li){const e=LEX.eq[li];return e&&e.length?e:[]}
+function enGloss(li){const e=grEq(li);if(!e.length)return "";const g=LEX.gl[e[0][0]];return g?g[3]:""}
+// English gloss for an OCS lemma: meaning of the Greek word it most often translates (Dodson), with "I say" → "say".
+function enLemmaGloss(li){
+  let g=enGloss(li);if(!g)return "";
+  return g.replace(/^I am\b/,"be").replace(/(^|, )I /g,"$1").replace(/^I /,"");
+}
+function glossOf(li){return S.lang==="en"?enLemmaGloss(li):ruGloss(li)}
+function shortGloss(li){
+  if(S.lang==="en"){const e=enLemmaGloss(li);return e?e.split(/[;,(]/)[0].trim():""}
+  const r=ruGloss(li);
+  if(r) return r.replace(/⚠/g,"").split(/[;(]/)[0].trim();
+  const e=enGloss(li);return e?"≈ "+e.split(/[;,]/)[0]:"";
+}
+function morphParts(m){const out=[];if(!m)return out;for(let i=0;i<9;i++){const c=m[i];if(c&&c!=="-"&&M[i][c])out.push(M[i][c])}return out.filter(Boolean)}
+function shortParse(t){
+  const m=t[2]||"",pos=LEX.cl[t[1]][1];if(!m||m==="---------n")return "";
+  const Tn=S.lang==="en"?{p:"pres.",i:"impf.",a:"aor.",r:"perf.",s:"l-ptc.",u:"past",l:"plpf.",f:"fut."}:{p:"наст.",i:"имперф.",a:"аор.",r:"перф.",s:"л-прич.",u:"прош.",l:"плюсквам.",f:"буд."};
+  const Md=S.lang==="en"?{m:"impv.",n:"inf.",p:"ptc.",u:"supine",s:"subj."}:{m:"повел.",n:"инф.",p:"прич.",u:"супин",s:"сосл."};
+  const o=[];
+  if(pos==="V-"){ if(m[3]==="p"||m[3]==="n"||m[3]==="u"){o.push((Tn[m[2]]||"")+" "+(Md[m[3]]||""))}else{o.push(Tn[m[2]]||"");if(Md[m[3]])o.push(Md[m[3]])}
+    if(m[0]!=="-")o.push(m[0]+T(" л.",""));}
+  if(m[6]!=="-")o.push(CASE_SHORT[m[6]]||"");
+  if(m[1]!=="-")o.push(NUM_SHORT[m[1]]||"");
+  if(m[5]!=="-"&&pos!=="Nb")o.push(GEN_SHORT[m[5]]||"");
+  return o.join(" ").replace(/\s+/g," ").trim();
+}
+
+/* ================= data loading ================= */
+async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(u+" "+r.status);return r.json()}
+function indexBook(code){
+  const d=B[code];
+  for(const [ch,vs] of Object.entries(d.chapters)){
+    for(const v of vs){
+      const loc=[code,+ch,v.v];
+      for(const id of (v.c||[])){
+        const t=d.tok[id];IX.tok[id]=t;IX.loc[id]=loc;
+        if(t[0]){(IX.lem[t[1]]||(IX.lem[t[1]]=[])).push(id);if(t[5])(IX.g2c[t[5]]||(IX.g2c[t[5]]=[])).push(id);}
+        if(t[4])(IX.kids[t[4]]||(IX.kids[t[4]]=[])).push(id);
+      }
+      for(const gid of (v.gr||[])){const g=d.gtok[gid];IX.gtok[gid]=g;IX.gloc[gid]=loc;(IX.glem[g[1]]||(IX.glem[g[1]]=[])).push(gid)}
+    }
+  }
+}
+const loading={};
+function loadBook(code){
+  if(!loading[code]) loading[code]=getJSON(`data/${code}.json`).then(d=>{B[code]=d;indexBook(code);onBookLoaded(code);return d});
+  return loading[code];
+}
+function loadedCount(){return Object.keys(B).length}
+function loadedNote(){return loadedCount()<4?T(` (загружено ${loadedCount()} из 4 Евангелий)`,` (${loadedCount()} of 4 Gospels loaded)`):""}
+function onBookLoaded(code){ if(sel&&deskOpen()) renderDesk(); }
+
+/* ================= header controls ================= */
+function buildHeader(){
+  $("#books").onclick=e=>{const b=e.target.closest("button");if(b)go(b.dataset.b,1)};
+  $("#chap").onchange=e=>go(S.book,+e.target.value);
+  $("#prev").onclick=()=>step(-1);$("#next").onclick=()=>step(1);
+  $("#setBtn").onclick=()=>{const p=$("#settings");p.hidden=!p.hidden;$("#setBtn").setAttribute("aria-expanded",String(!p.hidden))};
+  $("#aboutBtn").onclick=openAbout;
+  $("#langSeg").onclick=e=>{const b=e.target.closest("button");if(b)setLang(b.dataset.v)};
+  $("#scriptSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.script=b.dataset.v;save();refreshAll()};
+  $("#glossSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.gloss=b.dataset.v;save();syncSettings();renderChapter()};
+  for(const k of PAR_KEYS){$("#p-"+k).onchange=e=>{S.par[k]=e.target.checked;save();renderChapter()}}
+  $("#thr").onchange=e=>{S.thr=Math.max(1,+e.target.value||1);save();renderChapter()};
+  $("#parseIl").onchange=e=>{S.parseIl=e.target.checked;save();renderChapter()};
+  $("#viewSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.view=b.dataset.v;save();syncSettings();renderChapter()};
+  $("#sideSel").onchange=e=>{S.side=e.target.value;save();renderChapter()};
+}
+function refreshAll(){
+  applyDicts();applyStatic();if(atHome())renderHome();syncSettings();syncNav();renderChapter();
+  if(deskOpen())renderDesk();
+  if(!$("#pop").hidden)showPop();
+}
+function syncSettings(){
+  document.body.classList.toggle("script-glag",S.script==="glag");
+  document.body.classList.toggle("script-lat",S.script==="lat");
+  for(const b of $("#langSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.lang));
+  for(const b of $("#scriptSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.script));
+  for(const b of $("#glossSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.gloss));
+  for(const k of PAR_KEYS)$("#p-"+k).checked=!!S.par[k];
+  $("#thr").value=S.thr;$("#parseIl").checked=!!S.parseIl;
+  for(const b of $("#viewSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.view));
+  document.body.classList.remove("v-ocs","v-both","v-tr");document.body.classList.add("v-"+S.view);
+  $("#sideSel").value=S.side;$("#sideSel").hidden=S.view==="ocs";
+  latinTree($("header.top"));
+}
+function syncNav(){
+  $("#books").setAttribute("aria-label",T("Евангелие","Gospel"));
+  $("#books").innerHTML=BOOKS.map(b=>`<button data-b="${b[0]}" title="${esc(bookName(b[0]))}" aria-pressed="${b[0]===S.book}">${bookAbbr(b[0])}</button>`).join("");
+  const n=BK[S.book][3];
+  $("#chap").innerHTML=Array.from({length:n},(_,i)=>`<option value="${i+1}"${i+1===S.ch?" selected":""}>${T("Глава","Chapter")} ${i+1}</option>`).join("");
+}
+function step(d){
+  let i=BOOKS.findIndex(b=>b[0]===S.book),ch=S.ch+d;
+  if(ch<1){if(i===0)return;i--;ch=BOOKS[i][3]}
+  else if(ch>BOOKS[i][3]){if(i===BOOKS.length-1)return;i++;ch=1}
+  go(BOOKS[i][0],ch);
+}
+function go(book,ch,verse,tokId){
+  const h=`#${book}-${ch}`+(verse?`-${verse}`:"");
+  pendingSel=tokId||null;
+  if(location.hash!==h) location.hash=h; else route();
+}
+let pendingSel=null;
+async function route(){
+  if(!location.hash||location.hash==="#home"){showHome(true);return}
+  const fromHome=atHome();showHome(false);
+  const m=/^#(MATT|MARK|LUKE|JOHN)-(\d+)(?:-(\d+))?$/.exec(location.hash||"");
+  let book=S.book,ch=S.ch,verse=null;
+  if(m){book=m[1];ch=Math.min(+m[2],BK[book][3])||1;verse=m[3]?+m[3]:null}
+  const changed=book!==S.book||ch!==S.ch||!$("#reader .verse");
+  S.book=book;S.ch=ch;save();syncNav();
+  if(!B[book]){$("#reader").innerHTML=`<div class="loading">${T("Загрузка текста…","Loading text…")}</div>`;await loadBook(book)}
+  if(changed)renderChapter();
+  if(verse){const el=document.getElementById(`v-${verse}`);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600)}}
+  else if(changed||fromHome) window.scrollTo(0,0);
+  if(pendingSel){select("c",pendingSel,true,deskOpen());pendingSel=null}
+}
+
+/* ================= reader ================= */
+function wordHTML(id,t){
+  if(!t[0]) return "";
+  const li=t[1],freq=LEX.cl[li][3],pos=LEX.cl[li][1];
+  const rare=S.gloss==="notes"&&freq<=S.thr&&pos!=="Ne";
+  const cls="w"+(rare?" rare":"");
+  const before=t[7]?`<span class="pn">${esc(scr(t[7]))}</span>`:"";
+  const after=t[8]==null?"":t[8];
+  const afterH=after.trim()?`<span class="pn">${esc(scr(after.replace(/\s+$/,"")))}</span>${/\s$/.test(after)?" ":""}`:after;
+  if(S.gloss==="il"){
+    const g=freq<=S.thr||S.thr>=5000?shortGloss(li):"";
+    const pc=S.parseIl?shortParse(t):"";
+    return `${before}<span class="${cls}" data-id="${id}" data-l="${li}"><span class="fm">${esc(scr(t[0]))}${after.trim()?`<span class="pn">${esc(scr(after.trim()))}</span>`:""}</span>${pc?`<span class="pc">${esc(pc)}</span>`:""}<span class="gl">${esc(g)||"&nbsp;"}</span></span> `;
+  }
+  return `${before}<span class="${cls}" data-id="${id}" data-l="${li}">${esc(scr(t[0]))}</span>${afterH}`;
+}
+function renderChapter(){
+  const d=B[S.book];if(!d)return;
+  const vs=d.chapters[S.ch]||[];
+  const anyOcs=vs.some(v=>v.c&&v.c.length);
+  let h=`<h1 class="chap">${esc(bookName(S.book))} · <span class="num">${S.ch}</span></h1>
+   <div class="sub">${T("Нажмите на слово: форма, лемма, значение и греческий оригинал","Click any word for its form, dictionary form, meaning and the Greek original")}</div>
+   <div class="colhead"><span></span><span>${T("Мариинское евангелие","Codex Marianus (Old Church Slavonic)")}</span><span>${esc(sideName(S.side))}</span></div>`;
+  if(!anyOcs) h+=`<div class="banner">${T("Мариинский кодекс эту главу не сохранил (рукопись начинается с Мф 5:24). Ниже — греческий текст и переводы; старославянский текст начнётся с Мф 5:24.","The Codex Marianus does not preserve this chapter: the manuscript begins at Matthew 5:24. The Greek and the translations are shown; the Slavonic starts at Mt 5:24.")}</div>`;
+  else if(vs.some(v=>!v.c)) h+=`<div class="banner">${T("В этой главе есть стихи, которых нет в рукописи или которые пока не размечены в PROIEL; они отмечены как лакуны.","Some verses in this chapter are missing from the manuscript or not yet annotated in PROIEL; they are marked as gaps.")}</div>`;
+  for(const v of vs){
+    let ocs="";
+    if(v.c&&v.c.length){ocs=v.c.map(id=>wordHTML(id,d.tok[id])).join("")}
+    else ocs=anyOcs?`<span class="lac">${T("лакуна в рукописи","gap in the manuscript")}</span>`:"";
+    let app="";
+    if(S.gloss==="notes"&&v.c){
+      const seen=new Set(),items=[];
+      for(const id of v.c){const t=d.tok[id];if(!t[0])continue;const li=t[1];const r=LEX.cl[li];
+        if(r[3]<=S.thr&&r[1]!=="Ne"&&!seen.has(li)){seen.add(li);const g=shortGloss(li);if(g)items.push(`<b>${esc(scr(clean(r[0])))}</b> ${esc(g)}`)}}
+      if(items.length)app=`<div class="app">${items.join(" · ")}</div>`;
+    }
+    const grHTML=()=>v.gr.map(g=>{const x=d.gtok[g];return `${x[4]?esc(x[4]):""}<span class="g" data-g="${g}">${esc(x[0])}</span>${esc(x[3]==null?" ":x[3])}`}).join("");
+    const trHTML=k=>k==="gr"?(v.gr&&v.gr.length?grHTML():""):(v[k]?(k==="kjv"?v[k]:esc(v[k])):"");
+    let par="";
+    for(const k of PAR_KEYS){
+      if(!S.par[k]||(S.view!=="ocs"&&k===S.side)||S.view==="tr")continue;
+      const x=trHTML(k);if(x)par+=`<div class="par${k==="gr"?" gr":""}"><span class="tag">${T(PAR_TAG[k][0],PAR_TAG[k][1])}</span><span class="tx">${x}</span></div>`;
+    }
+    const sideX=S.view==="ocs"?"":trHTML(S.side);
+    const side=S.view==="ocs"?"":`<div class="side${S.side==="gr"?" gr":""}">${sideX||`<span class="lac">${T("нет текста","no text")}</span>`}</div>`;
+    if(S.view==="tr"){ if(!sideX)continue; h+=`<div class="verse" id="v-${v.v}"><div class="vg"><span class="vn" data-v="${v.v}">${v.v}</span></div>${side}</div>`; continue }
+    if(!ocs&&!par&&!sideX)continue;
+    h+=`<div class="verse" id="v-${v.v}"><div class="vg"><span class="vn" data-v="${v.v}" title="${T("Ссылка на стих","Link to this verse")}">${v.v}</span></div><div class="ocs">${ocs}</div>${side}${app}${par}</div>`;
+  }
+  const r=$("#reader");r.innerHTML=h;r.classList.toggle("il",S.gloss==="il");
+  if(sel)paintSel();
+}
+$("#reader").addEventListener("click",e=>{
+  const w=e.target.closest(".w");if(w){select("c",w.dataset.id);return}
+  const g=e.target.closest(".g");if(g){select("g",g.dataset.g);return}
+  const vn=e.target.closest(".vn");if(vn){go(S.book,S.ch,+vn.dataset.v)}
+});
+$("#reader").addEventListener("mouseover",e=>{
+  const g=e.target.closest(".g");
+  document.querySelectorAll(".w.hal").forEach(x=>x.classList.remove("al","hal"));
+  if(g)for(const id of (IX.g2c[g.dataset.g]||[])){const el=document.querySelector(`.w[data-id="${id}"]`);if(el&&!el.classList.contains("al"))el.classList.add("al","hal")}
+});
+
+/* ================= selection ================= */
+function deskOpen(){return $("#desk").classList.contains("open")}
+function openDesk(tab){if(tab)S.tab=tab;save();hidePop();renderDesk();$("#desk").classList.add("open");document.body.classList.add("desk-open")}
+function closeDesk(){$("#desk").classList.remove("open");document.body.classList.remove("desk-open")}
+function select(kind,id,scroll,inDesk){
+  sel={kind,id};concFilter=null;
+  if(kind==="g"&&S.tab!=="greek"&&S.tab!=="conc")S.tab="greek";
+  if(kind==="c"&&S.tab==="greek"&&!tokOf(id)?.[5])S.tab="parse";
+  paintSel();
+  if(scroll){const el=document.querySelector(kind==="c"?`.w[data-id="${id}"]`:`.g[data-g="${id}"]`);if(el)el.scrollIntoView({block:"center"})}
+  if(inDesk||deskOpen()){renderDesk();if(!deskOpen())openDesk()}
+  else showPop();
+}
+function hidePop(){$("#pop").hidden=true}
+function showPop(){
+  const pop=$("#pop");if(!sel)return;
+  const el=document.querySelector(sel.kind==="c"?`.w[data-id="${sel.id}"]`:`.g[data-g="${sel.id}"]`);
+  pop.setAttribute("aria-label",T("Слово","Word"));
+  pop.innerHTML=popHTML();latinTree(pop);pop.hidden=false;
+  if(el){const r=el.getBoundingClientRect();const w=pop.offsetWidth;
+    let left=window.scrollX+r.left;left=Math.max(window.scrollX+8,Math.min(left,window.scrollX+document.documentElement.clientWidth-w-8));
+    let top=window.scrollY+r.bottom+6;
+    if(r.bottom+pop.offsetHeight+12>window.innerHeight&&r.top>pop.offsetHeight+80)top=window.scrollY+r.top-pop.offsetHeight-6;
+    pop.style.left=left+"px";pop.style.top=top+"px";}
+}
+function glossLine(li,gl){
+  const r=LEX.cl[li],g=glossOf(li);
+  if(r[1]==="Ne"){const gq=gl||(grEq(li).length?LEX.gl[grEq(li)[0][0]]:null);
+    return `${T("имя собственное","proper name")}${gq?` · <span class="gk">${esc(clean(gq[0]))}</span>${S.lang==="en"&&gq[3]?` (${esc(gq[3])})`:""}`:""}`}
+  if(!g)return `<span class="muted">${T("глосса не составлена — см. «Греческий» и «Словари»","no gloss yet; see the Greek and Dictionaries tabs")}</span>`;
+  return S.lang==="en"?`${esc(g)} <span class="muted" title="Meaning of the Greek word this most often translates">(via Greek)</span>`:fmtGloss(g);
+}
+function popHTML(){
+  const X=T("Закрыть","Close");
+  if(sel.kind==="c"){
+    const t=tokOf(sel.id),li=t[1],r=LEX.cl[li];
+    const g=t[5]&&IX.gtok[t[5]],gl=g&&LEX.gl[g[1]];
+    const notes=grammarNotes(sel.id,t).map(n=>n[0]).slice(0,3);
+    return `<div class="ph"><span class="pf">${esc(scr(t[0]))}</span><button class="x" data-pclose aria-label="${X}">✕</button></div>
+     <div class="pl">← <span class="o">${esc(scr(clean(r[0])))}</span> · ${esc(POS[r[1]]||r[1])} · ${r[3]}×</div>
+     <div class="pg">${glossLine(li,gl)}</div>
+     <div class="feat">${morphParts(t[2]).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+     ${notes.length?`<div class="pn2">${notes.map(n=>`<span>${n}</span>`).join("")}</div>`:""}
+     ${g?`<div class="pgk">${T("греч.","Greek")} <span class="gk">${esc(g[0])}</span> ← <span class="gk">${esc(clean(gl[0]))}</span>${gl[3]?` <span class="muted">‘${esc(gl[3])}’</span>`:""}</div>`:""}
+     <div class="pa"><button data-open="parse">${T("Разбор","Parse")}</button><button data-open="forms">${T("Формы","Forms")}</button>${g?`<button data-open="greek">${T("Греческий","Greek")}</button>`:""}<button data-open="conc">${T("Конкорданция","Concordance")}</button></div>`;
+  }
+  const g=IX.gtok[sel.id],gl=LEX.gl[g[1]];
+  const c=(IX.g2c[sel.id]||[]).map(id=>tokOf(id)[0]).join(" ");
+  return `<div class="ph"><span class="pf gk" style="font-family:var(--f-text)">${esc(g[0])}</span><button class="x" data-pclose aria-label="${X}">✕</button></div>
+   <div class="pl">← <span class="gk">${esc(clean(gl[0]))}</span> · ${esc(POS[gl[1]]||gl[1])}${gl[2]?` · G${gl[2]}`:""}</div>
+   <div class="pg">${esc(gl[3]||"")}</div>
+   <div class="feat">${decodeGreek(g[2],gl[1]).slice(1).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+   <div class="pgk">${T("в Мариинском:","in the Marianus:")} <span class="o">${c?esc(scr(c)):"—"}</span></div>
+   <div class="pa"><button data-open="greek">${T("Греческий","Greek")}</button><button data-open="conc">${T("Конкорданция","Concordance")}</button></div>`;
+}
+$("#pop").addEventListener("click",e=>{
+  if(e.target.closest("[data-pclose]")){hidePop();return}
+  const b=e.target.closest("[data-open]");if(b)openDesk(b.dataset.open);
+});
+document.addEventListener("click",e=>{if(!e.target.closest("#pop,.w,.g"))hidePop()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("#pop").hidden)hidePop();else if(deskOpen())closeDesk()}});
+window.addEventListener("resize",()=>{if(!$("#pop").hidden)showPop()});
+function paintSel(){
+  document.querySelectorAll(".w.sel,.w.same,.w.al,.g.al,.g.sel").forEach(x=>x.classList.remove("sel","same","al","hal"));
+  if(!sel)return;
+  if(sel.kind==="c"){
+    const t=tokOf(sel.id);if(!t)return;
+    document.querySelectorAll(`.w[data-l="${t[1]}"]`).forEach(x=>x.classList.add("same"));
+    const el=document.querySelector(`.w[data-id="${sel.id}"]`);if(el)el.classList.add("sel");
+    if(t[5]){const g=document.querySelector(`.g[data-g="${t[5]}"]`);if(g)g.classList.add("al")}
+  }else{
+    const g=document.querySelector(`.g[data-g="${sel.id}"]`);if(g)g.classList.add("sel");
+    for(const id of (IX.g2c[sel.id]||[])){const el=document.querySelector(`.w[data-id="${id}"]`);if(el)el.classList.add("al")}
+  }
+}
+
+/* ================= desk ================= */
+function TABS(){return [["parse",T("Разбор","Parse")],["forms",T("Формы","Forms")],["greek",T("Греческий","Greek")],["conc",T("Конкорданция","Concordance")],["dict",T("Словари","Dictionaries")]]}
+function renderDesk(){
+  const head=$("#deskHead"),tabs=$("#tabs"),body=$("#deskBody");
+  if(!sel)return;
+  let t,gid,li;
+  if(sel.kind==="c"){t=tokOf(sel.id);if(!t)return;li=t[1];gid=t[5]}
+  else{gid=sel.id;const c=IX.g2c[gid]||[];if(c.length){t=tokOf(c[0]);li=t[1]}}
+  const X=T("Закрыть","Close");
+  if(sel.kind==="c"){
+    const r=LEX.cl[li];
+    head.innerHTML=`<div class="row"><div class="pform">${esc(scr(t[0]))}</div><button class="close" id="closeDesk" aria-label="${X}">✕</button></div>
+      <div class="lemline">${T("лемма","dictionary form")} <span class="lem lnk" data-conc="1">${esc(scr(clean(r[0])))}</span> · ${esc(POS[r[1]]||r[1])} · <span class="muted">${T(`${r[3]}× в Евангелиях`,`${r[3]}× in the Gospels`)}</span></div>
+      <div class="gloss">${glossLine(li,t[5]&&IX.gtok[t[5]]?LEX.gl[IX.gtok[t[5]][1]]:null)}</div>`;
+  }else{
+    const g=IX.gtok[gid],gl=LEX.gl[g[1]];
+    head.innerHTML=`<div class="row"><div class="pform gk" style="font-family:var(--f-text);font-size:28px">${esc(g[0])}</div><button class="close" id="closeDesk" aria-label="${X}">✕</button></div>
+      <div class="lemline">${T("лемма","lemma")} <span class="gk">${esc(clean(gl[0]))}</span> · ${esc(POS[gl[1]]||gl[1])}${gl[2]?` · Strong G${gl[2]}`:""}</div>
+      <div class="gloss">${esc(gl[3]||"")}</div>`;
+  }
+  const cb=$("#closeDesk");if(cb)cb.onclick=closeDesk;
+  head.querySelectorAll("[data-conc]").forEach(x=>x.onclick=()=>{S.tab="conc";save();renderDesk()});
+  const avail=TABS().filter(([k])=>sel.kind==="c"||k==="greek"||k==="conc");
+  if(!avail.some(([k])=>k===S.tab))S.tab=avail[0][0];
+  tabs.innerHTML=avail.map(([k,l])=>`<button role="tab" data-t="${k}" aria-selected="${k===S.tab}">${l}</button>`).join("");
+  tabs.onclick=e=>{const b=e.target.closest("button");if(!b)return;S.tab=b.dataset.t;save();renderDesk()};
+  let h="";
+  try{
+    if(S.tab==="parse")h=tabParse(sel.id,t);
+    else if(S.tab==="forms")h=tabForms(li,sel.id);
+    else if(S.tab==="greek")h=tabGreek(gid,t);
+    else if(S.tab==="conc")h=sel.kind==="c"?tabConc(li,sel.id):tabGreekConc(IX.gtok[gid][1],gid);
+    else if(S.tab==="dict")h=tabDict(li);
+  }catch(err){h=`<p class="muted">${T("Ошибка отображения","Display error")}: ${esc(err.message)}</p>`;console.error(err)}
+  body.innerHTML=h;body.scrollTop=0;
+  body.onclick=deskClick;
+  latinTree(head);latinTree(body);
+}
+function fmtGloss(g){return esc(g).replace(/⚠([^;(]*)/g,'<span class="ff" title="Ложный друг переводчика">⚠$1</span>')}
+function deskClick(e){
+  const j=e.target.closest("[data-jump]");if(j){const [b,c,v,id]=j.dataset.jump.split("-");go(b,+c,+v,id||null);if(window.innerWidth<=760&&!id)closeDesk();return}
+  const s=e.target.closest("[data-sel]");if(s){select("c",s.dataset.sel,true,true);return}
+  const f=e.target.closest("[data-filter]");if(f){concFilter=concFilter===f.dataset.filter?null:f.dataset.filter;renderDesk();return}
+  const gt=e.target.closest("[data-gsel]");if(gt){const id=gt.dataset.gsel;const loc=IX.gloc[id];if(loc&&(loc[0]!==S.book||loc[1]!==S.ch)){go(loc[0],loc[1],loc[2]);setTimeout(()=>select("g",id,true,true),60)}else select("g",id,true,true);return}
+  const cp=e.target.closest("[data-copy]");if(cp){const txt=cp.dataset.copy;navigator.clipboard?.writeText(txt).then(()=>{cp.textContent=T("Скопировано","Copied")},()=>{cp.textContent=txt});return}
+}
+
+/* ---------- parse tab ---------- */
+function tabParse(id,t){
+  const r=LEX.cl[t[1]],pos=r[1],m=t[2]||"";
+  let h=`<h3>${T("Форма","Form")}</h3><div class="feat">${[POS[pos]||pos,...morphParts(m)].map((x,i)=>`<span${i===0?' class="k"':""}>${esc(x)}</span>`).join("")}</div>`;
+  const sp=splitEnding(t[0],clean(r[0]));
+  if(sp)h+=`<div style="margin-top:8px" class="muted">${T("Сравните с леммой:","Compared with the dictionary form:")} <span class="split">${esc(scr(sp[0]))}<span class="end">${esc(scr(sp[1]))}</span></span> ← <span class="o">${esc(scr(clean(r[0])))}</span></div>`;
+  const notes=grammarNotes(id,t);
+  if(notes.length)h+=`<h3>${T("Что здесь происходит","What is going on here")}</h3>`+notes.map(n=>`<div class="note"><b class="t">${n[0]}</b>${n[1]}</div>`).join("");
+  h+=`<h3>${T("Синтаксис","Syntax")}</h3>`+syntaxHTML(id,t);
+  const cor=correspondences(clean(r[0]));
+  if(cor.length)h+=`<h3>${T("Соответствия с русским","Sound correspondences with modern Russian")}</h3>`+cor.map(c=>`<div class="note">${c}</div>`).join("");
+  return h;
+}
+function splitEnding(form,lemma){
+  if(!form||!lemma)return null;
+  const a=form.replace(/[҃-҉ⷠ-ⷿ]/g,""),b=lemma;
+  let i=0;while(i<a.length&&i<b.length&&a[i]===b[i])i++;
+  if(i<2||i>=a.length)return null;
+  return [a.slice(0,i),a.slice(i)];
+}
+function kidsOf(id){return (IX.kids[id]||[])}
+function realHead(id){
+  let t=tokOf(id),h=t&&t[4],guard=0;
+  while(h&&guard++<6){const ht=tokOf(h);if(!ht)break;const p=LEX.cl[ht[1]][1];if(p==="C-"||ht[6]==="C"){h=ht[4];continue}break}
+  return h;
+}
+function tokLabel(id){
+  const t=tokOf(id);if(!t)return "—";
+  if(!t[0])return `<span class="muted">${EMPTY[t[6]]||"∅"}</span>`;
+  return `<span class="o lnk" data-sel="${id}">${esc(scr(t[0]))}</span>`;
+}
+function syntaxHTML(id,t){
+  const rel=t[3];let h=`<div class="syn">${T("Роль","Role")}: <b>${esc(REL[rel]||rel||"—")}</b>`;
+  const head=t[4],ht=head&&tokOf(head);
+  if(ht){
+    const hp=LEX.cl[ht[1]][1];
+    if(hp==="C-"||ht[6]==="C"){
+      const rh=realHead(id);
+      h+=`<br>${T("Входит в сочинение через","Coordinated by")} ${tokLabel(head)}${rh&&tokOf(rh)?`; ${T("общая вершина","shared head")}: ${tokLabel(rh)}`:""}`;
+    }else if(hp==="R-"){
+      const pl=clean(LEX.cl[ht[1]][0]);
+      h+=`<br>${T("Управляется предлогом","Governed by the preposition")} ${tokLabel(head)}${PREP_CASE[pl]?` <span class="muted">(${esc(scr(pl))} + ${PREP_CASE[pl]})</span>`:""}`;
+    }else h+=`<br>${T("Зависит от","Depends on")}: ${tokLabel(head)} <span class="muted">(${esc(REL[ht[3]]||ht[3]||"")})</span>`;
+  }else h+=`<br><span class="muted">${T("Вершина предложения.","Root of the sentence.")}</span>`;
+  const ks=kidsOf(id).filter(k=>tokOf(k));
+  if(ks.length){
+    h+=`<div style="margin-top:6px">${T("Зависимые слова:","Dependent words:")}</div><ul>`+ks.map(k=>{const kt=tokOf(k);return `<li>${tokLabel(k)} — ${esc(REL[kt[3]]||kt[3])}</li>`}).join("")+`</ul>`;
+  }
+  return h+"</div>";
+}
+
+/* ---------- grammar notes ---------- */
+function hasKidLemma(id,lemma){return kidsOf(id).some(k=>{const t=tokOf(k);return t&&clean(LEX.cl[t[1]][0])===lemma})}
+function grammarNotes(id,t){
+  const N=[],m=t[2]||"----------",r=LEX.cl[t[1]],pos=r[1],lem=clean(r[0]),form=(t[0]||"").replace(/[҃-҉ⷠ-ⷿ]/g,"");
+  const [p,n,tense,mood,voice,g,cs,deg,str]=m;
+  const add=(a,b)=>N.push([a,b]);
+  if(pos==="V-"){
+    if(tense==="a"&&mood==="i"){
+      const sig=/(хъ|хомъ|сте|ста|шѧ|ше|ховѣ)$/.test(form);
+      add(T("Аорист","Aorist"),T(`Простое прошедшее время для однократного, завершённого действия. В русском утрачено: переводите прошедшим временем совершенного вида (<i>рече</i> «сказал», <i>приде</i> «пришёл»). Во 2 и 3 л. ед. ч. формы совпадают.${sig?" Здесь видно сигматический суффикс (-х-/-с-/-ш-), как в <i>рѣхъ, дахъ, рѣшѧ</i>.":""}`,
+        `Simple past for a single, completed event, like the Greek aorist: <i>рече</i> “he said”, <i>приде</i> “he came”. Russian lost this tense and uses the perfective past instead. The 2nd and 3rd person singular look the same.${sig?" This form shows the sigmatic marker (-x-/-s-/-š-), as in <i>рѣхъ</i> “I said”, <i>дахъ</i> “I gave”.":""}`));
+    }
+    if(tense==="i") add(T("Имперфект","Imperfect"),T(`Прошедшее длительное или повторяющееся действие (≈ рус. несов. вид прош. вр.): <i>глаголаше</i> «говорил», <i>хождааше</i> «ходил». Признак: суффикс -ѣа-/-аа- и окончания -хъ, -ше, -хѫ.`,
+      `Past action in progress or repeated: <i>глаголаше</i> “he was saying”, <i>хождааше</i> “he used to walk”. Look for the suffix -ěa-/-aa- and endings -xŭ, -še, -xǫ.`));
+    if(tense==="s"&&mood==="p") add(T("Л-причастие (результатив)","L-participle (resultative)"),T(`Причастие на -лъ, -ла, -ло. Само по себе не употребляется: вместе с наст. вр. <i>бꙑти</i> образует перфект (<i>пришьлъ ѥси</i> «ты пришёл [и ты здесь]»), с имперфектом или аористом <i>бꙑти</i> — плюсквамперфект, с <i>бимь/бꙑ</i> — условное наклонение. Русское прошедшее время на -л происходит именно отсюда: связка <i>ѥсмь</i> отпала.`,
+      `Participle in -lŭ, -la, -lo. It never stands alone: with the present of <i>бꙑти</i> “to be” it makes the perfect (<i>пришьлъ ѥси</i> “you have come”), with the imperfect or aorist of “to be” the pluperfect, and with <i>бимь/бꙑ</i> the conditional. The modern Russian past tense in -l comes from this form after the auxiliary dropped away.`));
+    if(tense==="r") add(T("Перфект","Perfect"),T("Л-причастие + настоящее время бꙑти. Результат прошлого действия, актуальный в настоящем.","L-participle + present of “to be”: a past action whose result still holds."));
+    if(tense==="l") add(T("Плюсквамперфект","Pluperfect"),T("Л-причастие + имперфект (или аорист) бꙑти: действие, предшествовавшее другому прошедшему.","L-participle + imperfect (or aorist) of “to be”: an action before another past action."));
+    if(tense==="f") add(T("Будущее время","Future"),T(`У <i>бꙑти</i> есть особая форма будущего (<i>бѫдѫ, бѫдеши</i>). У других глаголов будущее выражается настоящим временем глагола совершенного вида (<i>приидетъ</i> «придёт») или описательно: <i>имамь</i>/<i>хощѫ</i>/<i>начьнѫ</i> + инфинитив.`,
+      `Only <i>бꙑти</i> “to be” has a real future (<i>бѫдѫ</i> “I will be”). Other verbs express the future with the present of a perfective verb (<i>приидетъ</i> “he will come”) or with <i>имамь</i> “I have”, <i>хощѫ</i> “I want”, <i>начьнѫ</i> “I begin” + infinitive.`));
+    if(tense==="p"&&mood==="i") add(T("Настоящее время","Present"),T(`Окончания: -ѫ/-ѭ, -еши/-иши, -етъ/-итъ; мн. -емъ, -ете, -ѫтъ/-ѧтъ; дв. -евѣ, -ета, -ете. У глаголов совершенного вида настоящее время обычно значит будущее, как в русском.`,
+      `Endings: sg. -ǫ, -eši/-iši, -etŭ/-itŭ; pl. -emŭ, -ete, -ǫtŭ/-ętŭ; dual -evě, -eta, -ete. With perfective verbs the present usually means the future, as in modern Russian.`));
+    if(mood==="m") add(T("Повелительное наклонение","Imperative"),T(`Ед. 2–3 л. -и/-и (<i>остави</i>), мн. -ѣте/-ите, дв. -ѣта/-ита; 1 л. мн. -ѣмъ/-имъ («давайте…»). Отрицание: <i>не</i> + повелит.`,
+      `Command form. Sg. 2nd–3rd person -i (<i>остави</i> “leave!”), pl. -ěte/-ite, dual -ěta/-ita; 1st pl. -ěmŭ/-imŭ “let us…”. Negated with <i>не</i>.`));
+    if(mood==="n") add(T("Инфинитив","Infinitive"),T("Окончание -ти (после к/г: -щи: <i>рещи, мощи</i>). Ср. рус. «мочь, печь» из *-кти, *-гти.","Ending -ti; after k/g it becomes -šti (<i>рещи</i> “to say”, <i>мощи</i> “to be able”)."));
+    if(mood==="u") add(T("Супин","Supine"),T(`Неопределённая форма на -тъ после глаголов движения, выражает цель: <i>иде ловитъ рꙑбъ</i> «пошёл ловить рыбу». Дополнение при супине стоит в родительном падеже. В русском утрачен.`,
+      `A verb form in -tŭ used after verbs of motion to express purpose: <i>иде ловитъ рꙑбъ</i> “he went to catch fish”. Its object goes in the genitive. Lost in modern Russian.`));
+    if(mood==="s") add(T("Сослагательное (условное) наклонение","Conditional"),T("Образуется л-причастием и особыми формами бꙑти (<i>бимь, би, бꙑ, бимъ, бисте, бѫ</i>) — отсюда русская частица «бы».","Made from the l-participle plus special forms of “to be” (<i>бимь, би, бꙑ</i>…), the source of the Russian particle “бы” (would)."));
+    if(mood==="p"&&tense!=="s"){
+      const tn=tense==="p"?T("настоящего времени","present"):tense==="a"||tense==="u"?T("прошедшего времени","past"):M[2][tense]||"";
+      add(T(`Причастие: ${voice==="p"?"страдательное":"действительное"} ${tn}`,`Participle: ${tn} ${voice==="p"?"passive":"active"}`),
+        voice==="p"
+          ? (tense==="p"?T(`Суффикс -мъ (<i>видимъ, любимъ</i>). Склоняется как прилагательное; ср. рус. «видимый, любимый».`,`Suffix -mŭ (<i>видимъ</i> “being seen”). Declines like an adjective.`)
+                        :T(`Суффиксы -нъ/-енъ/-тъ (<i>пьсанъ, распѧтъ</i>). Склоняется как прилагательное; ср. рус. «писан, распят».`,`Suffixes -nŭ/-enŭ/-tŭ (<i>пьсанъ</i> “written”, <i>распѧтъ</i> “crucified”). Declines like an adjective.`))
+          : (tense==="p"?T(`Им. п. ед. м. -ѧ/-ꙑ (<i>глаголѧ, грѧдꙑ</i>), в косвенных падежах основа на -ѧщ-/-ѫщ- (<i>глаголѭщю</i>). Ср. рус. «говорящий» (церковнослав.) и «говоря».`,`Nom. sg. masc. ends in -ę/-y (<i>глаголѧ</i> “saying”); the other cases use a stem in -ęšt-/-ǫšt- (<i>глаголѭщю</i>).`)
+                        :T(`Им. п. ед. м. -ъ/-въ (<i>шьдъ, рекъ, видѣвъ</i>), в косвенных падежах основа на -ъш-/-въш- (<i>видѣвъша</i>). Ср. рус. «видевший», «видев».`,`Nom. sg. masc. ends in -ŭ/-vŭ (<i>шьдъ</i> “having gone”, <i>видѣвъ</i> “having seen”); the other cases use a stem in -ŭš-/-vŭš-.`)));
+      if(str==="s"&&cs==="n") add(T("≈ русское деепричастие","≈ English “having done…” phrase"),T(`Краткая форма в именительном падеже часто работает как обстоятельство при главном глаголе (роль «${esc(REL[t[3]]||t[3])}»). Русские деепричастия — застывшие краткие причастия: <i>шедъ</i> → «шед(ши)», <i>глаголѧ</i> → «говоря».`,
+        `A short-form participle in the nominative usually acts like an adverbial clause attached to the main verb (role: ${esc(REL[t[3]]||t[3])}). Translate as “having gone…”, “saying…”. Russian gerunds (деепричастия) descend from exactly these forms.`));
+      if(str==="w") add(T("Полная форма причастия","Long-form participle"),T(`Полная (местоимённая) форма — определение или субстантивация: <i>грѧдꙑи</i> «грядущий, тот, кто идёт», <i>вѣроуѩи</i> «верующий».`,`The long (definite) form works as an adjective or a noun: <i>грѧдꙑи</i> “the one who comes”, <i>вѣроуѩи</i> “the one who believes”.`));
+      if(cs==="d"&&(t[3]==="adv"||t[3]==="xadv"||t[3]==="obl")) {
+        const subj=kidsOf(id).find(k=>tokOf(k)&&tokOf(k)[3]==="sub");
+        add(T("Дательный самостоятельный","Dative absolute"),T(`Оборот «существительное/местоимение в Д. п. + причастие в Д. п.» = придаточное времени или причины. Калька греческого genitivus absolutus. ${subj?`Подлежащее оборота: ${tokLabel(subj)}. `:""}Пример: <i>вечероу же бꙑвъшоу</i> «когда наступил вечер».`,
+          `A noun or pronoun in the dative plus a participle in the dative make a time or cause clause (“when…”, “since…”). It renders the Greek genitive absolute. ${subj?`Subject of the phrase: ${tokLabel(subj)}. `:""}Example: <i>вечероу же бꙑвъшоу</i> “when evening had come”.`));
+      }
+    }
+    if(lem==="бꙑти"&&!t[0]?.startsWith("бѫ")) add(T("Глагол бꙑти","The verb бꙑти “to be”"),T("Неправильный глагол: наст. <i>ѥсмь, ѥси, ѥстъ, ѥсмъ, ѥсте, сѫтъ</i>; отриц. <i>нѣсмь… нѣстъ</i>; имперф. <i>бѣахъ, бѣаше</i> (или <i>бѣхъ, бѣ</i>); аорист <i>бꙑхъ, бꙑстъ/бꙑ, бꙑшѧ</i>; буд. <i>бѫдѫ</i>.",
+      "Irregular. Present <i>ѥсмь, ѥси, ѥстъ, ѥсмъ, ѥсте, сѫтъ</i> (I am … they are); negative <i>нѣсмь … нѣстъ</i>; imperfect <i>бѣахъ, бѣаше</i> (or <i>бѣхъ, бѣ</i>); aorist <i>бꙑхъ, бꙑстъ/бꙑ, бꙑшѧ</i>; future <i>бѫдѫ</i>."));
+    if(kidsOf(id).some(k=>{const kt=tokOf(k);return kt&&kt[0]&&/^с[ѧꙙ]$/.test(kt[0])})) add(T("Возвратный глагол с сѧ","Reflexive verb with сѧ"),T("Частица <i>сѧ</i> — отдельное слово (форма В. п. местоимения <i>себе</i>), может стоять не рядом с глаголом. В русском она приросла к глаголу как постфикс -ся.","<i>сѧ</i> is a separate little word (the accusative of “oneself”) and can stand away from the verb. In Russian it fused onto the verb as the ending -ся."));
+    if(hasKidLemma(id,"не")){
+      const go=kidsOf(id).find(k=>{const kt=tokOf(k);return kt&&kt[3]==="obj"&&kt[2]&&kt[2][6]==="g"});
+      if(go) add(T("Родительный отрицания","Genitive of negation"),T(`При отрицании прямое дополнение стоит в родительном падеже: ${tokLabel(go)}. Как в русском «не видел дома».`,`Under negation the direct object goes into the genitive: ${tokLabel(go)}. Russian still does this.`));
+    }
+  }
+  if(pos!=="V-"){
+    if(n==="d") add(T("Двойственное число","Dual number"),T(`Для двух предметов или лиц. Окончания: И.–В. м. -а, ж./ср. -ѣ/-и; Р.–М. -оу; Д.–Т. -ома/-ама. В русском следы: «глаза, рога, два стола (ст.-сл. дъва стола)».`,`A separate number for exactly two. Endings: nom./acc. masc. -a, fem./neut. -ě/-i; gen./loc. -u; dat./instr. -oma/-ama. Russian keeps traces (глаза “eyes”, два стола “two tables”).`));
+    if(cs==="v") add(T("Звательный падеж","Vocative"),T("Форма обращения: <i>отьче, господи, равьви, жено</i>. В русском сохранился в «Боже», «Господи», «Отче».","The form for direct address: <i>отьче</i> “O father”, <i>господи</i> “O Lord”, <i>жено</i> “woman!”."));
+    if(cs==="l") add(T("Местный падеж","Locative"),T("Соответствует русскому предложному, но без предлога может означать место или время: <i>томь дьни</i> «в тот день». Окончания: -ѣ, -и, -оу (сꙑноу), -е (камене).","Location, usually after a preposition; without one it can mark time or place: <i>томь дьни</i> “on that day”. Endings -ě, -i, -u, -e."));
+    if(cs==="i") add(T("Творительный падеж","Instrumental"),T("Окончания ед.: -омь/-емь (м., ср.), -оѭ/-еѭ (ж.); мн. -ꙑ/-и, -ами. Ср. рус. -ом/-ой(-ою).","Means or accompaniment (“by, with”). Sg. endings -omĭ/-emĭ (masc., neut.), -ojǫ/-ejǫ (fem.); pl. -y/-i, -ami."));
+    if(cs==="g"&&t[3]==="part") add(T("Партитивный родительный","Partitive genitive"),T("Родительный части: «взять (немного) хлеба».","Genitive of a part: “some of the bread”."));
+    if(cs==="d"&&t[3]==="atr") add(T("Приименной (притяжательный) дательный","Possessive dative"),T(`Дательный при существительном вместо родительного или притяжательного прилагательного: <i>братъ ми</i> «мой брат».`,`A dative attached to a noun to show possession: <i>братъ ми</i> “my brother” (literally “brother to me”).`));
+    if((pos==="A-"||pos==="Ps"||pos==="Pd")&&str==="w") add(T("Полная (местоимённая) форма","Long (definite) form"),T("Полная форма = краткая + указательное местоимение <i>и, ꙗ, ѥ</i>: <i>добръ + и → добрꙑи</i>. Выражает определённость («тот самый добрый»). В русском полные формы стали обычными определениями, а краткие остались в сказуемом.","Long form = short form + the pronoun <i>и, ꙗ, ѥ</i>: <i>добръ + и → добрꙑи</i>. It works like “the”: “the good one”. Russian adjectives today are these long forms."));
+    if(pos==="A-"&&str==="s"&&t[3]==="atr") add(T("Краткая форма в роли определения","Short form as a modifier"),T("В старославянском краткие прилагательные свободно служат определением (<i>добръ чловѣкъ</i>), в отличие от русского.","In OCS the short (indefinite) form freely modifies nouns, like “a good man” (<i>добръ чловѣкъ</i>). Russian uses short forms only as predicates."));
+    if(deg==="c") add(T("Сравнительная степень","Comparative"),T(`Суффиксы -ѣи/-ѣиши- и -ии/-ьш- (<i>болии</i>, <i>мьнии</i>). Ср. рус. «больший, меньший, лучший».`,`Suffixes -ěi/-ěiš- and -ii/-ĭš- (<i>болии</i> “greater”, <i>мьнии</i> “lesser”).`));
+    if(pos==="Pp"&&lem==="и"){
+      const nn=/^н/.test(form);
+      add(T("Местоимение и = «он»","Pronoun и = “he”"),T("Анафорическое местоимение *jь (и, ꙗ, ѥ): Р. <i>ѥго</i>, Д. <i>ѥмоу</i>, В. <i>и, ѭ, ѥ</i>, мн. <i>ихъ, имъ, ѩ</i>. Это русское «он, его, ему» без начального н-."+(nn?" Здесь стоит <b>н-</b> после предлога (<i>къ немоу, отъ нѥго</i>): так же в русском «к нему», «от него».":""),
+        "The 3rd-person pronoun “he, she, it, they”: gen. <i>ѥго</i>, dat. <i>ѥмоу</i>, acc. <i>и, ѭ, ѥ</i>, pl. <i>ихъ, имъ, ѩ</i>."+(nn?" Here it takes an <b>n-</b> after a preposition (<i>къ немоу</i> “to him”), as in modern Russian.":"")));
+    }
+    if(pos==="Pd"&&lem==="онъ") add(T("онъ = «тот»","онъ = “that”, not “he”"),T("В старославянском <i>онъ</i> — указательное местоимение дальнего плана («тот»). Личное местоимение 3 л. — <i>и</i> (его, ему).","In OCS <i>онъ</i> is a demonstrative, “that (one)”. The word for “he” is <i>и</i>. In Russian <i>он</i> became “he”."));
+    if(pos==="Pk"&&/^с[ѧꙙ]$/.test(form)) add("сѧ",T("Краткая (энклитическая) форма В. п. возвратного местоимения <i>себе</i>. Относится к глаголу, но пишется отдельно и может стоять не рядом с ним; в русском превратилась в постфикс -ся.","Short accusative of “oneself”. It belongs to a verb but is a separate word and may stand apart from it; Russian fused it to the verb as -ся."));
+    if(pos==="Pk"&&/^с[иі]$/.test(form)) add("си",T("Краткая форма Д. п. <i>себѣ</i> (ср. «поди-ка си»).","Short dative of “oneself”: “for oneself”."));
+    if(pos==="Pp"&&/^(ми|ти|ны|вы|на|ва)$/.test(form)&&cs==="d") add(T("Энклитика","Enclitic pronoun"),T("Краткая форма дательного (<i>ми, ти, ны, вы</i>) = «мне, тебе, нам, вам».","Short unstressed dative: <i>ми, ти, ны, вы</i> = “to me, to you, to us, to you (pl.)”."));
+    if(lem==="да"&&pos==="G-") add(T("да + настоящее время","да + present"),T("Союз цели («чтобы»): <i>да видѧтъ</i> «чтобы видели». В главном предложении — пожелание или побуждение: <i>да бѫдетъ</i> «да будет».","Purpose “so that”: <i>да видѧтъ</i> “so that they may see”. In a main clause it is a wish: <i>да бѫдетъ</i> “let it be”."));
+    if(lem==="ꙗко"&&pos==="G-") add("ꙗко",T("Союз «что / потому что» (= греч. ὅτι). Перед прямой речью ставится как кавычки и не переводится.","“That / because” (Greek ὅτι). Before direct speech it works like opening quotation marks and is left untranslated."));
+    if(lem==="аще"&&pos==="G-") add("аще",T("«Если». С л-причастием и бꙑ — нереальное условие: <i>аще бꙑ вѣдѣлъ</i> «если бы знал».","“If”. With the l-participle and <i>бꙑ</i> it is contrary to fact: <i>аще бꙑ вѣдѣлъ</i> “if he had known”."));
+    if(lem==="же"||lem==="бо"||lem==="ли") add(T("Энклитика","Enclitic particle"),T(`<i>${esc(lem)}</i> стоит на втором месте во фразе (закон Ваккернагеля), как греческие δέ, γάρ. <i>же</i> ≈ «же, а», <i>бо</i> ≈ «ибо, ведь».`,`<i>${esc(lem)}</i> always sits in second position in its clause (Wackernagel’s law), like Greek δέ and γάρ. <i>же</i> ≈ “and, but”, <i>бо</i> ≈ “for”, <i>ли</i> marks a question.`));
+  }
+  if(t[3]==="voc"&&cs!=="v") add(T("Обращение","Address"),T("Слово употреблено как обращение (часто в им. п., если особой зват. формы нет).","Used in direct address; nominative is used when there is no separate vocative form."));
+  return N;
+}
+function correspondences(lem){
+  const o=[];
+  if(/ѫ|ѭ/.test(lem))o.push(T(`<b>ѫ</b> (большой юс, носовое [õ]) ≈ рус. <b>у</b>: <i>рѫка</i> → рука, <i>пѫть</i> → путь.`,`<b>ѫ</b> (big yus, nasal “ǫ”) became Russian <b>у</b> (u): <i>рѫка</i> → рука “hand”.`));
+  if(/ѧ|ѩ/.test(lem))o.push(T(`<b>ѧ</b> (малый юс, носовое [ẽ]) ≈ рус. <b>я</b>: <i>имѧ</i> → имя, <i>пѧть</i> → пять.`,`<b>ѧ</b> (little yus, nasal “ę”) became Russian <b>я</b> (ja): <i>имѧ</i> → имя “name”.`));
+  if(/ѣ/.test(lem))o.push(T(`<b>ѣ</b> (ять) ≈ рус. <b>е</b>: <i>вѣра</i> → вера, <i>мѣсто</i> → место.`,`<b>ѣ</b> (yat, “ě”) became Russian <b>е</b> (e): <i>вѣра</i> → вера “faith”.`));
+  if(/жд/.test(lem))o.push(T(`<b>жд</b> ≈ рус. <b>ж</b>: <i>одежда</i> ~ одёжа, <i>рождениѥ</i> ~ рожать (южнославянская черта, вошла в русский книжный язык).`,`<b>жд</b> (žd) is South Slavic; native Russian has <b>ж</b> (ž). Russian borrowed many žd-words from Church Slavonic.`));
+  if(/щ|шт/.test(lem))o.push(T(`<b>щ</b> (шт) ≈ рус. <b>ч</b>: <i>нощь</i> → ночь, <i>свѣща</i> → свеча; ср. «освещение» — «свеча».`,`<b>щ</b> (št) is South Slavic; native Russian has <b>ч</b> (č): <i>нощь</i> → ночь “night”.`));
+  if(/^[бвгдзкмпстхчцшж]?[бвгдзкмпстхчцшж](ра|ла|рѣ|лѣ)[бвгдзклмнпрстхчцшжщ]/.test(lem))o.push(T(`Возможно <b>неполногласие</b>: -ра-, -ла-, -рѣ-, -лѣ- между согласными ≈ рус. -оро-, -оло-, -ере-: <i>градъ</i> — город, <i>глава</i> — голова, <i>брѣгъ</i> — берег.`,`Possible <b>South Slavic -ra-/-la-</b> where Russian has -oro-/-olo-: <i>градъ</i> “city” ~ Russian город, <i>глава</i> “head” ~ голова.`));
+  if(/[бвгдзклмнпрстхчцшж][ъь][бвгдзклмнпрстхчцшж]/.test(lem))o.push(T(`<b>ъ, ь</b> (еры) — сверхкраткие гласные. В «сильной» позиции дали рус. <b>о / е</b> (<i>сънъ</i> → сон, <i>дьнь</i> → день), в «слабой» исчезли (<i>кънѧѕь</i> → князь).`,`<b>ъ, ь</b> (yers, “ŭ, ĭ”) were very short vowels. Some became Russian <b>о / е</b> (<i>сънъ</i> → сон “sleep”), others disappeared (<i>кънѧѕь</i> → князь “prince”).`));
+  if(/ꙑ/.test(lem))o.push(T(`<b>ꙑ</b> = рус. <b>ы</b>.`,`<b>ꙑ</b> = Russian <b>ы</b> (y).`));
+  return o;
+}
+
+/* ---------- forms (paradigm) tab ---------- */
+function tabForms(li,curId){
+  const occ=IX.lem[li]||[];const r=LEX.cl[li],pos=r[1];
+  const cur=tokOf(curId);
+  let h=`<div class="muted" style="font-size:13px">${T(`Формы леммы <span class="o">${esc(scr(clean(r[0])))}</span>, засвидетельствованные в Мариинском евангелии (${occ.length} употр.${loadedNote()}). Пустые клетки — форма не встретилась, а не «не существует».`,
+    `Every form of <span class="o">${esc(scr(clean(r[0])))}</span> that occurs in the Codex Marianus (${occ.length} occurrences${loadedNote()}), with counts. An empty cell means the form does not occur in this text, not that it cannot exist.`)}</div>`;
+  const byM={};
+  for(const id of occ){const t=tokOf(id);const k=t[2];const fm=t[0].toLowerCase();(byM[k]||(byM[k]={}))[fm]=(byM[k][fm]||0)+1}
+  const cell=(k)=>{const fs=byM[k];if(!fs)return `<td class="empty">—</td>`;const iscur=cur&&cur[2]===k;
+    return `<td${iscur?' class="cur"':""}>${Object.entries(fs).sort((a,b)=>b[1]-a[1]).map(([f,c])=>`${esc(scr(f))}<sup>${c}</sup>`).join("<br>")}</td>`};
+  const keys=Object.keys(byM);
+  if(pos==="V-"){
+    const fin=[["p","i",T("Настоящее","Present")],["f","i",T("Будущее","Future")],["a","i",T("Аорист","Aorist")],["i","i",T("Имперфект","Imperfect")],["p","m",T("Повелительное","Imperative")],["a","s",T("Сослагательное","Conditional")]];
+    for(const [tn,md,lab] of fin){
+      const ks=keys.filter(k=>k[2]===tn&&k[3]===md);if(!ks.length)continue;
+      const nums=["s","d","p"].filter(nm=>ks.some(k=>k[1]===nm));
+      const vc=[...new Set(ks.map(k=>k[4]))];
+      for(const v of vc){
+        h+=`<h3>${lab}${vc.length>1?" · "+(M[4][v]||v):""}</h3><div class="tw"><table class="pd"><tr><th></th>${nums.map(nm=>`<th>${NUM_SHORT[nm]}</th>`).join("")}</tr>`;
+        for(const p of ["1","2","3"]){h+=`<tr><th>${p}${T(" л.",S.lang==="en"?(p==="1"?"st":p==="2"?"nd":"rd"):"")}</th>`+nums.map(nm=>{const k=ks.find(k=>k[0]===p&&k[1]===nm&&k[4]===v);return k?cell(k):`<td class="empty">—</td>`}).join("")+`</tr>`}
+        h+=`</table></div>`;
+      }
+    }
+    const nonfin=keys.filter(k=>k[3]==="n"||k[3]==="u");
+    if(nonfin.length){h+=`<h3>${T("Инфинитив и супин","Infinitive and supine")}</h3><div class="tw"><table class="pd">`+nonfin.map(k=>`<tr><th>${M[3][k[3]]}</th>${cell(k)}</tr>`).join("")+`</table></div>`}
+    const parts=keys.filter(k=>k[3]==="p");
+    const groups={};for(const k of parts){const g=k[2]+k[4];(groups[g]||(groups[g]=[])).push(k)}
+    for(const [g,ks] of Object.entries(groups)){
+      const lab=g[0]==="s"?T("Л-причастие","L-participle"):T(`Причастие: ${M[4][g[1]]||""}, ${M[2][g[0]]||""}`,`Participle: ${M[2][g[0]]||""} ${M[4][g[1]]||""}`);
+      h+=`<h3>${esc(lab)}</h3>`+nominalTables(ks,cell,true,true);
+    }
+  }else if(keys.some(k=>k[6]&&k[6]!=="-")){
+    h+=nominalTables(keys,cell,pos!=="Nb");
+    if(pos==="Nb")h+=declHint(clean(r[0]),keys);
+  }else{
+    h+=`<div class="tw"><table class="pd"><tr><th>${T("неизменяемое","indeclinable")}</th>${cell(keys[0])}</tr></table></div>`;
+  }
+  return h;
+}
+function nominalTables(keys,cell,splitGender,compact){
+  let h="";const gens=splitGender?[...new Set(keys.map(k=>k[5]+k[8]))]:["*"];
+  for(const g of gens){
+    const ks=keys.filter(k=>g==="*"||(k[5]+k[8])===g);
+    const nums=["s","d","p"].filter(n=>ks.some(k=>k[1]===n));if(!nums.length)continue;
+    const cases=CASE_ORDER.concat(["c","e","o"]).filter(c=>(!compact&&CASE_ORDER.slice(0,6).includes(c))||ks.some(k=>k[6]===c));
+    if(g!=="*")h+=`<div class="muted" style="font-size:12px;margin-top:6px">${esc(M[5][g[0]]||"")}${g[1]!=="-"?" · "+esc(M[8][g[1]]||""):""}</div>`;
+    h+=`<div class="tw"><table class="pd"><tr><th></th>${nums.map(n=>`<th>${NUM_SHORT[n]}</th>`).join("")}</tr>`;
+    for(const c of cases){h+=`<tr><th>${CASE_SHORT[c]||c}</th>`+nums.map(n=>{const mk=ks.filter(k=>k[1]===n&&k[6]===c);
+      if(!mk.length)return `<td class="empty">—</td>`;if(mk.length===1)return cell(mk[0]);
+      const merged=mk.map(k=>cell(k).replace(/^<td[^>]*>|<\/td>$/g,"")).join("<br>");const cur=mk.some(k=>cell(k).includes('class="cur"'));return `<td${cur?' class="cur"':""}>${merged}</td>`}).join("")+`</tr>`}
+    h+=`</table></div>`;
+  }
+  return h;
+}
+const MODELS={
+ "o-m":["рабъ",["Твёрдое склонение на *-o (м. р.)","Hard o-stem (masculine)"],{s:["рабъ","раба","рабоу","рабъ","рабомь","рабѣ","рабе"],d:["раба","рабоу","рабома","раба","рабома","рабоу","раба"],p:["раби","рабъ","рабомъ","рабꙑ","рабꙑ","рабѣхъ","раби"]}],
+ "jo-m":["мѫжь",["Мягкое склонение на *-jo (м. р.)","Soft jo-stem (masculine)"],{s:["мѫжь","мѫжа","мѫжоу","мѫжь","мѫжемь","мѫжи","мѫжоу"],d:["мѫжа","мѫжоу","мѫжема","мѫжа","мѫжема","мѫжоу","мѫжа"],p:["мѫжи","мѫжь","мѫжемъ","мѫжѧ","мѫжи","мѫжихъ","мѫжи"]}],
+ "o-n":["село",["Твёрдое склонение на *-o (ср. р.)","Hard o-stem (neuter)"],{s:["село","села","селоу","село","селомь","селѣ","село"],d:["селѣ","селоу","селома","селѣ","селома","селоу","селѣ"],p:["села","селъ","селомъ","села","селꙑ","селѣхъ","села"]}],
+ "a-f":["жена",["Твёрдое склонение на *-a (ж. р.)","Hard a-stem (feminine)"],{s:["жена","женꙑ","женѣ","женѫ","женоѭ","женѣ","жено"],d:["женѣ","женоу","женама","женѣ","женама","женоу","женѣ"],p:["женꙑ","женъ","женамъ","женꙑ","женами","женахъ","женꙑ"]}],
+ "ja-f":["доуша",["Мягкое склонение на *-ja (ж. р.)","Soft ja-stem (feminine)"],{s:["доуша","доушѧ","доуши","доушѫ","доушеѭ","доуши","доуше"],d:["доуши","доушоу","доушама","доуши","доушама","доушоу","доуши"],p:["доушѧ","доушь","доушамъ","доушѧ","доушами","доушахъ","доушѧ"]}],
+ "i-f":["кость",["Склонение на *-i (ж. р.)","i-stem (feminine)"],{s:["кость","кости","кости","кость","костиѭ","кости","кости"],d:["кости","костьѭ","костьма","кости","костьма","костьѭ","кости"],p:["кости","костьи","костьмъ","кости","костьми","костьхъ","кости"]}],
+ "u-m":["сꙑнъ",["Склонение на *-u (м. р.)","u-stem (masculine)"],{s:["сꙑнъ","сꙑноу","сꙑнови","сꙑнъ","сꙑнъмь","сꙑноу","сꙑноу"],d:["сꙑнꙑ","сꙑновоу","сꙑнъма","сꙑнꙑ","сꙑнъма","сꙑновоу","сꙑнꙑ"],p:["сꙑнове","сꙑновъ","сꙑнъмъ","сꙑнꙑ","сꙑнъми","сꙑнъхъ","сꙑнове"]}],
+ "n-n":["имѧ",["Склонение на согласный *-n (ср. р.)","Consonant n-stem (neuter)"],{s:["имѧ","имене","имени","имѧ","именьмь","имене","имѧ"],d:["имени","имену","именьма","имени","именьма","имену","имени"],p:["имена","именъ","именьмъ","имена","имены","именьхъ","имена"]}],
+ "s-n":["слово",["Склонение на согласный *-s (ср. р.)","Consonant s-stem (neuter)"],{s:["слово","словесе","словеси","слово","словесьмь","словесе","слово"],d:["словеси","словесоу","словесьма","словеси","словесьма","словесоу","словеси"],p:["словеса","словесъ","словесьмъ","словеса","словесꙑ","словесьхъ","словеса"]}],
+ "n-m":["камꙑ",["Склонение на согласный *-n (м. р.)","Consonant n-stem (masculine)"],{s:["камꙑ","камене","камени","камень","каменьмь","камене","камꙑ"],d:["камени","каменоу","каменьма","камени","каменьма","каменоу","камени"],p:["камене","каменъ","каменьмъ","камени","каменьми","каменьхъ","камене"]}],
+};
+const S_STEMS=new Set(["слово","небо","чоудо","тѣло","дѣло","коло","око","оухо"]);
+function declHint(lem,keys){
+  const gen=keys.find(k=>k[5]&&k[5]!=="-")?.[5];
+  let k=null;
+  if(lem==="сꙑнъ"||lem==="домъ"||lem==="врьхъ"||lem==="полъ")k="u-m";
+  else if(/ꙑ$/.test(lem)&&gen==="m")k="n-m";
+  else if(/[мн]ѧ$/.test(lem)&&gen==="n")k="n-n";
+  else if(S_STEMS.has(lem))k="s-n";
+  else if(/ъ$/.test(lem)&&gen==="m")k="o-m";
+  else if(/[жшчщцꙉ]ь$|ль$|нь$|рь$/.test(lem)&&gen==="m")k="jo-m";
+  else if(/ь$/.test(lem)&&gen==="f")k="i-f";
+  else if(/о$/.test(lem)&&gen==="n")k="o-n";
+  else if(/[жшчщцꙉлнр]а$|ꙗ$|и$/.test(lem)&&gen==="f")k="ja-f";
+  else if(/а$/.test(lem)&&(gen==="f"||gen==="m"))k="a-f";
+  if(!k)return "";
+  const [w,labs,tab]=MODELS[k];const lab=T(labs[0],labs[1]);
+  let h=`<h3>${T("Образец склонения","Model declension")}</h3><div class="muted" style="font-size:13px">${T(`Вероятный тип: <b>${esc(lab)}</b>, образец <span class="o">${esc(scr(w))}</span>. Тип определён автоматически по лемме и роду; сверяйтесь со справочником.${S_STEMS.has(lem)?" У этих слов возможны и формы без -ес-.":""}`,
+    `Likely type: <b>${esc(lab)}</b>, model word <span class="o">${esc(scr(w))}</span>. The type is guessed automatically from the dictionary form and gender; check a grammar.${S_STEMS.has(lem)?" These nouns also have forms without -es-.":""}`)}</div>
+   <div class="tw"><table class="pd"><tr><th></th><th>${NUM_SHORT.s}</th><th>${NUM_SHORT.d}</th><th>${NUM_SHORT.p}</th></tr>`;
+  CASE_ORDER.forEach((c,i)=>{h+=`<tr><th>${CASE_SHORT[c]}</th><td>${esc(scr(tab.s[i]))}</td><td>${esc(scr(tab.d[i]))}</td><td>${esc(scr(tab.p[i]))}</td></tr>`});
+  return h+`</table></div>`;
+}
+
+/* ---------- greek tab ---------- */
+function decodeGreek(m,pos){return [POS[pos]||pos,...morphParts(m).map(x=>x.replace(" (л-форма)","").replace(" (l-form)",""))]}
+function tabGreek(gid,t){
+  if(!gid||!IX.gtok[gid])return `<p class="muted">${T("Для этого слова нет соответствия в греческом тексте (слово добавлено переводчиком или не выровнено).","This word has no counterpart in the Greek (the translator added it, or it is not aligned).")}</p>`;
+  const g=IX.gtok[gid],gl=LEX.gl[g[1]];
+  let h=`<h3>${T("Слово оригинала","Greek source word")}</h3><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span class="gk lnk" data-gsel="${gid}" style="font-size:24px">${esc(g[0])}</span><span>← <span class="gk">${esc(clean(gl[0]))}</span></span></div>
+   <div class="feat" style="margin-top:6px">${decodeGreek(g[2],gl[1]).map((x,i)=>`<span${i===0?' class="k"':""}>${esc(x)}</span>`).join("")}</div>`;
+  if(gl[3]||gl[4])h+=`<h3>${T("Значение (Dodson)","Meaning (Dodson lexicon)")}</h3><div>${esc(gl[3])}</div>${gl[4]&&gl[4]!==gl[3]?`<div class="muted" style="font-size:13px;margin-top:2px">${esc(gl[4])}</div>`:""}`;
+  if(t&&sel.kind==="c"){
+    const cm=t[2]||"",gm=g[2]||"";
+    const diffs=[],gk=T("греч.","Greek"),sl=T("слав.","Slavonic");
+    if(cm[2]!=="-"&&gm[2]!=="-"&&cm[2]!==gm[2]&&!(gm[2]==="a"&&cm[2]==="u")&&!(gm[2]==="r"&&cm[2]==="s"))diffs.push(`${T("время","tense")}: ${gk} ${M[2][gm[2]]||gm[2]} → ${sl} ${M[2][cm[2]]||cm[2]}`);
+    if(cm[3]!=="-"&&gm[3]!=="-"&&cm[3]!==gm[3])diffs.push(`${T("наклонение","mood")}: ${gk} ${M[3][gm[3]]||gm[3]} → ${sl} ${M[3][cm[3]]||cm[3]}`);
+    if(cm[6]!=="-"&&gm[6]!=="-"&&cm[6]!==gm[6])diffs.push(`${T("падеж","case")}: ${gk} ${M[6][gm[6]]||gm[6]} → ${sl} ${M[6][cm[6]]||cm[6]}`);
+    if(diffs.length)h+=`<h3>${T("Переводчик изменил","What the translator changed")}</h3><ul class="syn">${diffs.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`+
+      (gm[6]==="g"&&cm[6]==="d"&&cm[3]==="p"?`<div class="note">${T("Греческий родительный самостоятельный передан славянским дательным самостоятельным.","The Greek genitive absolute is rendered with the Slavonic dative absolute.")}</div>`:"");
+  }
+  const occ=IX.glem[g[1]]||[];const cnt={};
+  for(const x of occ){for(const cid of (IX.g2c[x]||[])){const ct=tokOf(cid);const l=ct[1];cnt[l]=(cnt[l]||0)+1}}
+  const ent=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(ent.length){const mx=ent[0][1];
+    h+=`<h3>${T("Как Мариинский кодекс переводит","How the Marianus translates")} ${esc(clean(gl[0]))}</h3><div class="bars">`+ent.map(([l,c])=>`<span class="o">${esc(scr(clean(LEX.cl[l][0])))}</span><span class="b" style="width:${Math.max(4,c/mx*100)}%"></span><span class="n">${c}</span>`).join("")+`</div>
+     <div class="muted" style="font-size:12.5px">${T(`${occ.length} употреблений в греческом тексте Евангелий${loadedNote()}. Полный список — во вкладке «Конкорданция».`,`${occ.length} occurrences in the Greek Gospels${loadedNote()}. The full list is in the Concordance tab.`)}</div>`;}
+  h+=`<div class="ext"><a href="https://logeion.uchicago.edu/${encodeURIComponent(clean(gl[0]))}" target="_blank" rel="noopener">Logeion (LSJ…)</a>`+
+     (gl[2]?`<a href="https://www.blueletterbible.org/lexicon/g${gl[2]}/kjv/tr/0-1/" target="_blank" rel="noopener">Strong G${gl[2]} · BLB</a>`:"")+
+     `<button data-copy="${esc(clean(gl[0]))}">${T("Копировать лемму","Copy lemma")}</button></div>`;
+  if(sel.kind==="c")h+=`<p class="muted" style="font-size:12.5px;margin-top:10px">${T("Можно нажимать и на греческие слова в колонке или строке «Гр»: подсветится их славянский перевод.","You can also click Greek words in the Greek column or line; their Slavonic translation lights up.")}</p>`;
+  return h;
+}
+function tabGreekConc(gli,curG){
+  const occ=IX.glem[gli]||[];const gl=LEX.gl[gli];
+  let h=`<div class="muted" style="font-size:13px"><span class="gk">${esc(clean(gl[0]))}</span>: ${T(`${occ.length} употр. в Евангелиях${loadedNote()}. Справа — славянский перевод в этом месте.`,`${occ.length} occurrences in the Gospels${loadedNote()}. On the right: the Slavonic word used in each place.`)}</div><ul class="conc">`;
+  for(const gid of occ.slice(0,400)){const loc=IX.gloc[gid];const c=(IX.g2c[gid]||[]).map(id=>tokOf(id)[0]).join(" ");
+    h+=`<li data-gsel="${gid}"><span class="ref">${ref(loc)}</span><span class="gk">${esc(IX.gtok[gid][0])}</span> → <span class="ctx">${c?esc(scr(c)):'<span class="muted">—</span>'}</span></li>`}
+  return h+`</ul>`+(occ.length>400?`<p class="muted">${T("Показаны первые 400.","Showing the first 400.")}</p>`:"");
+}
+
+/* ---------- concordance tab ---------- */
+function ctxHTML(id){
+  const loc=IX.loc[id];const d=B[loc[0]];const vs=d.chapters[loc[1]].find(v=>v.v===loc[2]);
+  const ids=(vs.c||[]).filter(x=>d.tok[x][0]);const i=ids.indexOf(id);
+  const a=Math.max(0,i-4),b=Math.min(ids.length,i+5);
+  return (a>0?"… ":"")+ids.slice(a,b).map(x=>x===id?`<span class="kw">${esc(scr(d.tok[x][0]))}</span>`:esc(scr(d.tok[x][0]))).join(" ")+(b<ids.length?" …":"");
+}
+function tabConc(li,curId){
+  const occ=IX.lem[li]||[];const r=LEX.cl[li];
+  const forms={};for(const id of occ){const f=tokOf(id)[0].toLowerCase();forms[f]=(forms[f]||0)+1}
+  let h=`<div class="muted" style="font-size:13px"><span class="o">${esc(scr(clean(r[0])))}</span> ${T(`встречается ${occ.length} раз${loadedNote()}. Фильтр по форме:`,`occurs ${occ.length} times${loadedNote()}. Filter by form:`)}</div>
+   <div class="chips">${Object.entries(forms).sort((a,b)=>b[1]-a[1]).map(([f,c])=>`<button data-filter="${esc(f)}" aria-pressed="${concFilter===f}">${esc(scr(f))}<sup>${c}</sup></button>`).join("")}</div>`;
+  const eq=grEq(li);
+  if(eq.length)h+=`<div class="muted" style="font-size:13px;margin-bottom:6px">${T("Чаще всего переводит:","Most often translates:")} ${eq.map(([g,n])=>`<span class="gk">${esc(clean(LEX.gl[g][0]))}</span> ×${n}`).join(", ")}</div>`;
+  const list=occ.filter(id=>!concFilter||tokOf(id)[0].toLowerCase()===concFilter);
+  h+=`<ul class="conc">`+list.slice(0,400).map(id=>{const loc=IX.loc[id];return `<li data-jump="${loc[0]}-${loc[1]}-${loc[2]}-${id}"><span class="ref">${ref(loc)}</span><span class="ctx">${ctxHTML(id)}</span></li>`}).join("")+`</ul>`;
+  if(list.length>400)h+=`<p class="muted">${T(`Показаны первые 400 из ${list.length}.`,`Showing the first 400 of ${list.length}.`)}</p>`;
+  return h;
+}
+
+/* ---------- dictionaries tab ---------- */
+function tabDict(li){
+  const r=LEX.cl[li],lem=clean(r[0]);
+  const eq=grEq(li);
+  let h=`<h3>${T("Русская глосса","Russian gloss (shown to Russian readers)")}</h3><div>${ruGloss(li)?fmtGloss(ruGloss(li)):`<span class="muted">${T("Русской глоссы нет (глоссы составлены для всех нарицательных лемм; имена собственные не глоссируются).","No Russian gloss (every common noun, verb etc. has one; proper names do not).")}</span>`}</div>`;
+  if(S.lang==="en"&&enLemmaGloss(li))h+=`<h3>English gloss</h3><div>${esc(enLemmaGloss(li))}</div><div class="muted" style="font-size:12.5px">Derived from the Greek word this lemma most often translates (Dodson lexicon).</div>`;
+  if(eq.length){h+=`<h3>${T("Греческие соответствия в Евангелиях","Greek equivalents in the Gospels")}</h3><ul class="syn">`+eq.map(([g,n])=>{const gl=LEX.gl[g];return `<li><span class="gk">${esc(clean(gl[0]))}</span> ×${n} — ${esc(gl[3]||"")}</li>`}).join("")+`</ul>
+    <div class="muted" style="font-size:12.5px">${T("Так устроен и «Старославянский словарь» (1994): значение задаётся через греческое слово, которое переводит писец.","The standard OCS dictionary (Staroslavjanskij slovar’, 1994) works the same way: meanings are given through the Greek word the scribe was translating.")}</div>`}
+  h+=`<h3>${T("Открыть в словарях","Look it up")}</h3><div class="ext">
+   <a href="https://gorazd.org/gulliver/?envLang=${T("ru","en")}" target="_blank" rel="noopener">Gorazd (SJS)</a>
+   <button data-copy="${esc(lem)}">${T("Копировать","Copy")} «${esc(scr(lem))}»</button>
+   <a href="https://en.wiktionary.org/wiki/${encodeURIComponent(lem)}#Old_Church_Slavonic" target="_blank" rel="noopener">Wiktionary</a>
+   <a href="https://archive.org/search?query=${encodeURIComponent("Lexicon palaeoslovenico-graeco-latinum Miklosich")}" target="_blank" rel="noopener">${T("Миклошич (1862–65)","Miklosich (1862–65)")}</a>
+  </div><p class="muted" style="font-size:12.5px">${T("В Gorazd вставьте лемму в поиск. Его основа — пражский «Slovník jazyka staroslověnského» с греческими, латинскими и русскими эквивалентами.","Paste the lemma into Gorazd’s search. It is the digital Prague Slovník jazyka staroslověnského, with Greek, Latin, Russian, German and English equivalents.")}</p>`;
+  return h;
+}
+
+/* ================= about ================= */
+function openAbout(){
+  const X=T("Закрыть","Close");
+  $("#aboutBody").innerHTML=`<button class="x" onclick="document.getElementById('about').close()">${X}</button>`+(S.lang==="en"?`
+  <h2>About this reader</h2>
+  <p>The text is the <b>Codex Marianus</b>, a Glagolitic Gospel book from the late 10th or early 11th century and one of the canonical Old Church Slavonic manuscripts. It begins at Matthew 5:24 and has gaps. The Cyrillic transcription, dictionary forms, the morphological and syntactic analysis of every word, and the word-by-word alignment with the Greek all come from the <b>PROIEL</b> treebank (Haug &amp; Jøhndal, Oslo).</p>
+  <p>The layout follows John Boyer’s readers (johnhboyer.com: Plato, Homer, Aristotle). Text and translation sit side by side; a click on a word opens its parse, and the full analysis, forms and concordance open from there.</p>
+  <p>The intended reader is a fluent Russian speaker learning OCS, so the default interface is Russian. This English mode exists so the site can be reviewed without reading Cyrillic. Switch Script to Latin to see the Slavonic transliterated.</p>
+  <h3>Texts</h3><ul>
+   <li><b>Old Church Slavonic</b>: PROIEL treebank, <i>marianus</i> (after Jagić 1883), CC BY-NC-SA 4.0.</li>
+   <li><b>Greek</b>: PROIEL <i>greek-nt</i> (Tischendorf 1869), with the same kind of analysis. The Slavonic is aligned to this text.</li>
+   <li><b>Russian Synodal</b> (1876), public domain. The Russian equivalent of the KJV: the traditional church translation.</li>
+   <li><b>Russian Freedom Bible</b> (eBible.org), public domain, modern Russian, published as a draft.</li>
+   <li><b>KJV</b> (1769) and the <b>World English Bible</b>, public domain.</li></ul>
+  <h3>Is there a Russian NRSV?</h3>
+  <p>The closest are Bishop Kassian’s New Testament (1970), a committee translation from the critical Greek text, and the Russian Bible Society’s Modern Russian Translation (2011). Both are under copyright and cannot be included.</p>
+  <h3>Dictionaries and grammars</h3><ul>
+   <li><b>Staroslavjanskij slovar’ (po rukopisjam X–XI vv.)</b>, ed. Cejtlin, Večerka, Blagova (1994): the best one-volume OCS dictionary for Russian speakers, with Greek parallels.</li>
+   <li><b>Gorazd</b> (gorazd.org): the digital Slovník jazyka staroslověnského (Prague), about 19,000 entries.</li>
+   <li><b>Miklosich, Lexicon palaeoslovenico-graeco-latinum</b> (1862–65): public domain, scans on archive.org.</li>
+   <li>Grammars: Xaburgaev and Remnëva (Russian); <b>Lunt</b>, <i>Old Church Slavonic Grammar</i> (English).</li>
+   <li>Greek: the free <b>Dodson</b> lexicon with Strong’s numbers is used here.</li></ul>
+  <h3>How the help works</h3>
+  <p>Parses are not guessed: every word form was tagged by hand in PROIEL, and the notes in the Parse tab are generated from those tags. Forms shows the paradigm built from forms actually found in the Gospels. The model declension is chosen automatically and marked as likely. Russian glosses were written for all 2,893 non-name lemmas. English glosses are taken from the meaning of the Greek word each lemma most often translates.</p>
+  <h3>Citation</h3>
+  <p class="muted">Haug, D. T. T. &amp; Jøhndal, M. L. 2008. Creating a Parallel Treebank of the Old Indo-European Bible Translations. LaTeCH 2008. Data: github.com/syntacticus/syntacticus-treebank-data. Non-commercial use only.</p>`:`
+  <h2>О чтеце</h2>
+  <p>Текст — <b>Мариинское евангелие</b> (Codex Marianus, глаголица, конец X – начало XI в.), один из канонических памятников старославянского языка. Рукопись начинается с Мф 5:24 и имеет лакуны. Кириллическая передача, леммы, морфологический и синтаксический разбор каждого слова и пословное выравнивание с греческим взяты из трибанка <b>PROIEL</b> (Haug &amp; Jøhndal, Осло).</p>
+  <p>Устройство страницы следует читалкам Джона Бойера (johnhboyer.com: Plato, Homer, Aristotle): текст и перевод рядом, нажатие на слово открывает разбор, а подробный разбор, формы и конкорданция открываются из него.</p>
+  <h3>Тексты</h3><ul>
+   <li><b>Старославянский</b>: PROIEL Treebank, <i>marianus</i> (по изд. Ягича 1883), CC BY-NC-SA 4.0.</li>
+   <li><b>Греческий</b>: PROIEL <i>greek-nt</i> (Тишендорф, 1869), с тем же разбором. Именно по нему выровнен славянский перевод.</li>
+   <li><b>Синодальный перевод</b> (1876), общественное достояние. По роли это русский «KJV»: традиционный церковный текст, местами следует славянской традиции.</li>
+   <li><b>«Библия свободы»</b> (eBible.org), общественное достояние. Современный язык, но это <i>черновой</i> перевод, а не комитетский.</li>
+   <li><b>KJV</b> (1769) и <b>World English Bible</b>, общественное достояние.</li></ul>
+  <h3>Есть ли русский аналог NRSV?</h3>
+  <p>Ближе всего — <b>Новый Завет в переводе еп. Кассиана (Безобразова)</b>, 1970, сделанный комиссией по критическому греческому тексту; по типу он близок к RSV/NRSV. Также <b>«Современный русский перевод» РБО</b> (2011, ближе к NIV/GNT по стилю). Оба защищены авторским правом и не могут быть встроены сюда, но доступны на bible.by и azbyka.ru.</p>
+  <h3>Словари и грамматики</h3><ul>
+   <li><b>Старославянский словарь (по рукописям X–XI вв.)</b>, ред. Р. М. Цейтлин, Р. Вечерка, Э. Благова (1994): лучший однотомник для русскоязычного читателя, с греческими параллелями.</li>
+   <li><b>Gorazd</b> (gorazd.org): цифровой «Slovník jazyka staroslověnského» (Прага), ~19 000 статей, с русскими, греческими и латинскими эквивалентами.</li>
+   <li><b>Miklosich, Lexicon palaeoslovenico-graeco-latinum</b> (1862–65): общественное достояние, сканы на archive.org.</li>
+   <li>Грамматики: <b>Хабургаев</b> «Старославянский язык»; <b>Ремнёва</b> «Старославянский язык»; <b>Селищев</b>; по-английски — <b>Lunt</b>, <i>Old Church Slavonic Grammar</i>.</li>
+   <li>Греческий: <b>Дворецкий</b> «Древнегреческо-русский словарь»; BDAG; здесь используется свободный словарь <b>Dodson</b> с номерами Стронга.</li></ul>
+  <h3>Как устроены подсказки</h3>
+  <p>Разбор форм не угадывается программой: каждая словоформа размечена вручную в PROIEL. Пояснения во вкладке «Разбор» строятся по этим признакам. «Формы» показывает парадигму, собранную из реально встреченных в Евангелиях форм. «Образец склонения» подбирается автоматически и помечен как вероятный. Русские глоссы составлены для всех 2 893 нарицательных лемм Евангелий; ⚠ отмечает ложных друзей переводчика (<i>животъ</i> «жизнь», <i>година</i> «час»).</p>
+  <h3>Цитирование</h3>
+  <p class="muted">Haug, D. T. T. &amp; Jøhndal, M. L. 2008. Creating a Parallel Treebank of the Old Indo-European Bible Translations. LaTeCH 2008. Данные: github.com/syntacticus/syntacticus-treebank-data. Только для некоммерческого использования.</p>`);
+  latinTree($("#aboutBody"));
+  $("#about").showModal();
+}
+
+
+/* ================= front page ================= */
+const COV={"MATT":[[25,1,25],[23,1,23],[17,1,17],[25,1,25],[48,1,23],[34],[29,4,4],[34],[38,7,7],[42,31,31],[30],[50,42,42],[58],[36],[39],[28],[27],[35],[30],[34],[46],[46],[39,39,39],[51],[46],[75],[66],[20]],"MARK":[[45],[28,28,28],[35],[41],[43],[56],[37],[38],[50],[52],[33],[44],[37],[72],[47],[20]],"LUKE":[[80],[52],[38],[44],[39],[49],[50],[56],[62],[42],[54],[59],[35],[35],[32],[31],[37,37,37],[43],[48],[47],[38],[71],[56],[53]],"JOHN":[[52,1,22],[25],[36],[54],[47],[71],[53,53,53],[59],[41],[42],[57],[50],[38],[31],[27],[33],[26],[40,14,28],[42],[31],[24,18,24]]};
+function setLang(v){
+  if(v===S.lang)return;S.lang=v;
+  if(S.lang==="en"&&(S.side==="syn"||S.side==="rfb"))S.side="web";
+  if(S.lang==="ru"&&(S.side==="web"||S.side==="kjv"))S.side="syn";
+  save();refreshAll();
+}
+const atHome=()=>document.body.classList.contains("at-home");
+function showHome(on){
+  const was=atHome();
+  document.body.classList.toggle("at-home",on);$("#home").hidden=!on;
+  if(on){closeAllForHome();renderHome();if(!was)window.scrollTo(0,0)}
+}
+function closeAllForHome(){const p=$("#pop");if(p)p.hidden=true}
+function covStats(code){
+  let tot=0,miss=0;const gaps=[];
+  COV[code].forEach((r,i)=>{tot+=r[0];for(let k=1;k<r.length;k+=2){miss+=r[k+1]-r[k]+1;
+    const g=gaps[gaps.length-1];
+    // join a gap that runs on from the end of the previous chapter
+    if(g&&r[k]===1&&g.ec===i&&g.ev===COV[code][i-1][0]){g.ec=i+1;g.ev=r[k+1];g.n+=r[k+1]}
+    else gaps.push({sc:i+1,sv:r[k],ec:i+1,ev:r[k+1],n:r[k+1]-r[k]+1})}});
+  return {tot,miss,have:tot-miss,gaps};
+}
+function gapRef(code,g){
+  const a=bookAbbr(code);
+  if(g.sc===g.ec&&g.sv===g.ev)return `${a} ${g.sc}:${g.sv}`;
+  if(g.sc===g.ec)return `${a} ${g.sc}:${g.sv}–${g.ev}`;
+  return `${a} ${g.sc}:${g.sv}–${g.ec}:${g.ev}`;
+}
+function firstVerseHTML(){
+  const d=B.MATT;if(!d)return null;
+  const v=(d.chapters[5]||[]).find(x=>x.v===24);if(!v||!v.c)return null;
+  let cyr="";for(const id of v.c){const t=d.tok[id];if(!t[0])continue;cyr+=(t[7]||"")+t[0]+(t[8]==null?" ":t[8])}
+  cyr=cyr.replace(/\s+/g," ").trim();
+  const glag=s=>{s=s.toLowerCase().replace(/оу|ѹ|ꙋ/g,"ⱆ");let o="";for(const c of s)o+=GL[c]||c;return o};
+  return {cyr,glag:glag(cyr),lat:latin(cyr),tr:S.lang==="en"?v.web:v.syn};
+}
+function fillFolio(){
+  const el=$("#folio");if(!el)return;
+  const f=firstVerseHTML();
+  if(!f){el.innerHTML=`<div class="lead-ocs" style="color:var(--muted);font-size:18px">${T("Загрузка первого стиха…","Loading the first verse…")}</div>`;loadBook("MATT").then(fillFolio);return}
+  const first=[...f.cyr][0],rest=f.cyr.slice(first.length);
+  el.innerHTML=`<div class="lead-ocs" lang="cu"><span class="ini">${esc(first)}</span>${esc(rest)}</div>
+   <dl>
+    <dt>${T("Глаголица","Glagolitic")}</dt><dd class="glag" lang="cu-Glag">${esc(f.glag)}</dd>
+    <dt>${T("Латиница","Latin")}</dt><dd>${esc(f.lat)}</dd>
+    <dt>${T("Перевод","English")}</dt><dd>${esc(f.tr||"")}</dd>
+   </dl>
+   <figcaption>${T("Мф 5:24 — первый уцелевший стих рукописи. Вверху кириллическая передача, которую показывает читалка; сама рукопись написана глаголицей.","Matthew 5:24, the first surviving verse. Above is the Cyrillic transcription the reader shows by default; the manuscript itself is written in Glagolitic, the second line. The third is the Latin transliteration available in the reader.")}</figcaption>`;
+}
+function renderHome(){
+  const en=S.lang==="en";
+  const st=Object.fromEntries(BOOKS.map(b=>[b[0],covStats(b[0])]));
+  const tot=BOOKS.reduce((a,b)=>a+st[b[0]].tot,0),have=BOOKS.reduce((a,b)=>a+st[b[0]].have,0);
+  const fmt=n=>n.toLocaleString(en?"en-US":"ru-RU");
+  const pct=(100*have/tot).toFixed(1).replace(".",en?".":",");
+  const resume=!(S.book==="MATT"&&S.ch===5);
+  const rows=BOOKS.map(b=>{const c=b[0],s=st[c];
+    const cells=COV[c].map((r,i)=>{
+      const n=r[0];let bg="var(--have)";
+      if(r.length>1){const stops=[];let pos=0;
+        for(let k=1;k<r.length;k+=2){const a=(r[k]-1)/n*100,z=r[k+1]/n*100;
+          stops.push(`var(--have) ${pos}%`,`var(--have) ${a}%`,`var(--gap) ${a}%`,`var(--gap) ${z}%`);pos=z}
+        stops.push(`var(--have) ${pos}%`,`var(--have) 100%`);bg=`linear-gradient(90deg,${stops.join(",")})`}
+      const m=[];for(let k=1;k<r.length;k+=2)m.push(r[k]===r[k+1]?`${r[k]}`:`${r[k]}–${r[k+1]}`);
+      const tip=`${bookName(c)} ${i+1}: ${n} ${T("ст.","verses")}`+(m.length?` · ${T("нет","missing")} ${m.join(", ")}`:"");
+      const isFirst=c==="MATT"&&i===4;
+      return `<button style="--n:${n};background:${bg}" data-b="${c}" data-c="${i+1}" class="${isFirst?"first":""}" title="${esc(tip)}" aria-label="${esc(tip)}"></button>`}).join("");
+    return `<div class="covrow"><div class="nm">${esc(bookName(c))}<small>${fmt(s.have)} / ${fmt(s.tot)} ${T("ст.","verses")}</small></div><div class="track">${cells}</div></div>`}).join("");
+  const gaps=BOOKS.flatMap(b=>st[b[0]].gaps.map(g=>({c:b[0],g})));
+  const gapBtns=gaps.map(({c,g})=>`<button data-b="${c}" data-c="${g.sc}" data-v="${g.sv}"><b>${esc(gapRef(c,g))}</b> <small>· ${g.n} ${T(g.n===1?"стих":(g.n%10>=2&&g.n%10<=4&&(g.n%100<10||g.n%100>=20)?"стиха":"стихов"),g.n===1?"verse":"verses")}</small></button>`).join("");
+  const F=en?[
+    ["Every word, parsed","Click any word for its dictionary form, its meaning and a full parse in plain words: <span class=\"hx\">aorist, 3rd person singular</span>; <span class=\"hx\">genitive plural, short-form adjective</span>. The tags were assigned by hand by scholars, not guessed by software."],
+    ["Grammar explained in place","Notes explain what the form is doing in its sentence: the dual, the aorist and imperfect, long and short adjectives, the dative absolute, and the word’s syntactic role."],
+    ["The paradigm behind the form","The Forms tab lays out every form of the word found in the Gospels as a declension or conjugation table, so you can see where this one fits."],
+    ["The Greek original","The Slavonic is a translation from Greek, and each word is aligned with the Greek word it renders: its parse, Strong’s number and lexicon entry. Point at a Greek word to light up its Slavonic match."],
+    ["Concordance","Every other place the word occurs in the Gospels, and every Slavonic word the translators chose for the same Greek word."],
+    ["Parallel translations","Russian Synodal (1876), the modern Russian Freedom Bible, the King James Version and the World English Bible, side by side or as lines under each verse, with the Greek."],
+    ["Help for Russian speakers","Hand-written Russian glosses for all 2,893 dictionary words, with false friends flagged: <span class=\"hx\">животъ</span> means “life”, not “belly”. In English mode, glosses come from the Greek equivalent."],
+    ["Your choice of script and help","Read in Cyrillic, Glagolitic or Latin letters. Rare words can be glossed in footnotes, or the whole text shown as an interlinear."],
+  ]:[
+    ["Разбор каждого слова","Нажмите на слово: словарная форма, значение и полный разбор обычными словами — <span class=\"hx\">аорист, 3 л. ед. ч.</span>; <span class=\"hx\">род. п. мн. ч., краткое прил.</span> Разметка сделана вручную филологами, а не угадана программой."],
+    ["Грамматика на месте","Пояснения показывают, что форма делает в предложении: двойственное число, аорист и имперфект, полные и краткие прилагательные, дательный самостоятельный, синтаксическая роль слова."],
+    ["Парадигма за формой","Вкладка «Формы» собирает все формы слова, встречающиеся в Евангелиях, в таблицу склонения или спряжения, чтобы было видно место данной формы."],
+    ["Греческий оригинал","Славянский текст — перевод с греческого, и каждое слово выровнено с греческим словом, которое оно передаёт: разбор, номер Стронга, словарная статья. Наведите на греческое слово — подсветится славянское."],
+    ["Конкорданция","Все остальные места, где встречается слово, и все славянские слова, которыми переводчики передавали то же греческое слово."],
+    ["Параллельные переводы","Синодальный (1876), современная «Библия свободы», KJV и World English Bible — рядом или строками под стихом, вместе с греческим."],
+    ["Ложные друзья","Русские глоссы для всех 2 893 словарных слов; ⚠ отмечает ложных друзей: <span class=\"hx\">животъ</span> — «жизнь», а не «живот», <span class=\"hx\">година</span> — «час»."],
+    ["Письмо и подсказки на выбор","Кириллица, глаголица или латиница. Редкие слова можно глоссировать в сносках или включить подстрочник для всего текста."],
+  ];
+  const feats=F.map((f,i)=>`<article><div class="no">${String(i+1).padStart(2,"0")}</div><h3>${f[0]}</h3><p>${f[1]}</p></article>`).join("");
+  $("#home").innerHTML=`
+  <nav class="home-top" aria-label="${T("Язык","Language")}">
+    <span class="home-mark">${T("Мариинское евангелие","Marianus Reader")}<small>${T("старославянская читалка","Old Church Slavonic reader")}</small></span>
+    <div class="seg" id="homeLang" role="group" aria-label="Language / Язык"><button data-v="ru" aria-pressed="${!en}">RU</button><button data-v="en" aria-pressed="${en}">EN</button></div>
+  </nav>
+  <section class="hero">
+    <div>
+      <p class="kicker">${T("Старославянский · четыре Евангелия · X–XI вв.","Old Church Slavonic · the four Gospels · 10th–11th century")}</p>
+      <h1>${T("Евангелия по-старославянски, <em>слово за словом</em>","The Gospels in Old Church Slavonic, <em>word by word</em>")}</h1>
+      <p class="lede">${T("Текст Мариинского евангелия — одной из древнейших славянских рукописей, — где у каждого слова есть разбор, парадигма, греческий оригинал и конкорданция. Для тех, кто знает русский и учит старославянский.","The text of the Codex Marianus, one of the oldest Slavic manuscripts, with a parse, a paradigm, the Greek original and a concordance behind every word. Built for Russian speakers learning Old Church Slavonic, with a full English interface.")}</p>
+      <div class="cta">
+        <button class="btn primary" id="startBtn">${T("Начать с Мф 5:24 →","Start at Matthew 5:24 →")}</button>
+        ${resume?`<button class="btn" id="resumeBtn">${T("Продолжить","Continue at")} ${esc(bookAbbr(S.book))} ${S.ch}</button>`:""}
+      </div>
+      <p class="cta-note">${T("Первые листы рукописи утрачены, поэтому текст начинается посреди Нагорной проповеди, с Мф 5:24. Евангелие от Матфея 1:1–5:23 в рукописи не сохранилось.","The manuscript’s first leaves are lost, so it opens in the middle of the Sermon on the Mount, at Matthew 5:24. Matthew 1:1–5:23 does not survive.")}</p>
+    </div>
+    <figure class="folio" id="folio"></figure>
+  </section>
+
+  <section class="h-sec">
+    <h2>${T("Что вы читаете","What you are reading")}</h2>
+    <p class="sub">${T("Не современное церковнославянское издание, а сама древняя рукопись, слово в слово.","Not a modern Church Slavonic edition, but one early manuscript, letter for letter.")}</p>
+    <div class="two">
+      <div class="prose">${en?`
+        <p>Old Church Slavonic is the first written Slavic language. It was created in the 860s for the mission of Cyril and Methodius, who translated the Gospels from Greek and invented an alphabet for it, Glagolitic. No manuscripts from their own time survive; the oldest that do are a small group of books copied around the year 1000.</p>
+        <p>The <b>Codex Marianus</b> is one of them: a Glagolitic book of the four Gospels, copied in the South Slavic Balkans in the late 10th or early 11th century. Its name comes from the skete of the Mother of God on Mount Athos, where Viktor Grigorovich found it in 1845. Its spelling already shows traces of the copyist’s own speech, which is part of what makes it worth reading closely.</p>
+        <p>The reader shows the text as transcribed into Cyrillic in Vatroslav Jagić’s 1883 edition, as encoded and fully annotated in the PROIEL treebank at the University of Oslo.</p>`:`
+        <p>Старославянский — первый письменный славянский язык. Он возник в 860-х годах в миссии Кирилла и Мефодия, которые перевели Евангелие с греческого и создали для него азбуку — глаголицу. Рукописей их времени не сохранилось; древнейшие дошедшие книги переписаны около 1000 года.</p>
+        <p><b>Мариинское евангелие</b> — одна из них: глаголическое четвероевангелие, переписанное на славянском юге Балкан в конце X — начале XI в. Название дано по Мариинскому скиту на Афоне, где его нашёл В. И. Григорович в 1845 году. В написании уже видны черты речи писца, и это одна из причин читать его внимательно.</p>
+        <p>Читалка показывает текст в кириллической передаче издания И. В. Ягича (1883), в том виде, в каком он закодирован и полностью размечен в трибанке PROIEL (Университет Осло).</p>`}
+      </div>
+      <dl class="facts">
+        <dt>${T("Рукопись","Manuscript")}</dt><dd>${T("Мариинское четвероевангелие","Codex Marianus, a tetraevangelion")}</dd>
+        <dt>${T("Дата","Date")}</dt><dd>${T("конец X — начало XI в.","late 10th – early 11th century")}</dd>
+        <dt>${T("Письмо","Script")}</dt><dd>${T("глаголица (здесь — кириллическая передача)","Glagolitic (shown here in Cyrillic transcription)")}</dd>
+        <dt>${T("Язык","Language")}</dt><dd>${T("старославянский, перевод с греческого","Old Church Slavonic, translated from Greek")}</dd>
+        <dt>${T("Найдена","Found")}</dt><dd>${T("Афон, 1845, В. И. Григорович","Mount Athos, 1845, by V. I. Grigorovich")}</dd>
+        <dt>${T("Хранится","Kept")}</dt><dd>${T("Российская государственная библиотека, Москва","Russian State Library, Moscow")}</dd>
+        <dt>${T("Издание","Edition")}</dt><dd>${T("В. Ягич, 1883; PROIEL, Осло","V. Jagić, 1883; PROIEL treebank, Oslo")}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="h-sec" id="survives">
+    <h2>${T("Что сохранилось — и чего нет","What survives, and what is missing")}</h2>
+    <p class="sub">${T("Рукописи тысяча лет, и часть листов утрачена. Каждый прямоугольник ниже — глава, ширина — число стихов; красным отмечены стихи, которых в тексте нет. Нажмите на главу, чтобы открыть её.","The manuscript is a thousand years old and some of its leaves are gone. Each block below is one chapter, sized by its number of verses; red marks verses that are not in the text. Click a chapter to open it.")}</p>
+    <div class="stats">
+      <div class="stat"><b>${pct}%</b><span>${T("стихов четырёх Евангелий","of the verses of the four Gospels")}</span></div>
+      <div class="stat"><b>${fmt(have)}</b><span>${T("стихов со старославянским текстом","verses with Slavonic text")}</span></div>
+      <div class="stat gapst"><b>${fmt(tot-have)}</b><span>${T("стихов отсутствует","verses missing")}</span></div>
+    </div>
+    <div class="covmap" id="covmap">${rows}</div>
+    <div class="covleg"><span><i style="background:var(--have)"></i>${T("текст есть","text survives")}</span><span><i style="background:var(--gap)"></i>${T("текста нет","missing")}</span><span><i style="background:var(--have);box-shadow:inset 0 -4px 0 var(--ink)"></i>${T("Мф 5 — начало рукописи","Mt 5, where the manuscript begins")}</span></div>
+    <div class="gaplist" id="gaplist">${gapBtns}</div>
+    <p class="gapnote">${T("Крупные пробелы — утраченные листы: начало Матфея и конец Иоанна (с 21:18). Остальные — пропуски писца или стихи, которых нет в цифровом издании. В читалке такие стихи всё равно показаны с переводом и помечены как лакуны, так что вы не потеряете нить.","The large gaps are lost leaves: the beginning of Matthew and the end of John (from 21:18). The others are verses the scribe left out or that the digital edition does not contain. In the reader these verses still appear with their translation, marked as gaps, so you never lose your place.")}</p>
+  </section>
+
+  <section class="h-sec">
+    <h2>${T("Что даёт читалка","What the reader gives you")}</h2>
+    <p class="sub">${T("Цифровые словари плохо справляются со склонением и спряжением. Здесь каждая форма уже разобрана, и разбор объяснён.","Digital dictionaries struggle with declension and conjugation. Here every form is already analysed, and the analysis is explained.")}</p>
+    <div class="feat">${feats}</div>
+  </section>
+
+  <section class="h-sec">
+    <h2>${T("Как читать","How to use it")}</h2>
+    <p class="sub">${T("Устройство как у читалок Джона Бойера: текст и перевод рядом, всё остальное — по нажатию.","Laid out like John Boyer’s Greek readers: text and translation side by side, everything else a click away.")}</p>
+    <ol class="steps">
+      <li><span class="n">1</span><b>${T("Нажмите на слово","Click a word")}</b><span>${T("Всплывёт форма, лемма, значение и греческое слово.","A popup gives its form, dictionary form, meaning and Greek word.")}</span></li>
+      <li><span class="n">2</span><b>${T("Откройте полный разбор","Open the full analysis")}</b><span>${T("Справа вкладки: Разбор, Формы, Греческий, Конкорданция, Словари.","A side panel has tabs: Parse, Forms, Greek, Concordance, Dictionaries.")}</span></li>
+      <li><span class="n">3</span><b>${T("Настройте «Вид»","Adjust the View menu")}</b><span>${T("Письмо, переводы под стихом, сноски или подстрочник.","Script, translation lines under each verse, footnotes or interlinear.")}</span></li>
+    </ol>
+  </section>
+
+  <div class="endcta"><p>${T("Рукопись начинается с середины фразы. Начнём там же.","The manuscript begins mid-sentence. So do we.")}</p><button class="btn primary" id="startBtn2">${T("Начать с Мф 5:24 →","Start at Matthew 5:24 →")}</button></div>
+
+  <footer class="home-foot" style="margin-top:40px">
+    ${T("Текст и разметка: PROIEL Treebank (Haug & Jøhndal), CC BY-NC-SA 4.0, только некоммерческое использование. Греческий: Тишендорф 1869 (PROIEL); словарь Dodson. Переводы: Синодальный, «Библия свободы», KJV, WEB — общественное достояние.","Text and annotation: PROIEL Treebank (Haug & Jøhndal), CC BY-NC-SA 4.0, non-commercial use only. Greek: Tischendorf 1869 (PROIEL); Dodson lexicon. Translations: Russian Synodal, Russian Freedom Bible, KJV, WEB, all public domain.")}
+    <a href="#" id="homeAbout">${T("Все источники","All sources")}</a>
+  </footer>`;
+  fillFolio();
+  latinTree($("#home .feat"));
+}
+$("#home").addEventListener("click",e=>{
+  const l=e.target.closest("#homeLang button");if(l){setLang(l.dataset.v);return}
+  if(e.target.closest("#startBtn,#startBtn2")){go("MATT",5,24);return}
+  if(e.target.closest("#resumeBtn")){go(S.book,S.ch);return}
+  if(e.target.closest("#homeAbout")){e.preventDefault();openAbout();return}
+  const c=e.target.closest(".track button,.gaplist button");
+  if(c){go(c.dataset.b,+c.dataset.c,c.dataset.v?+c.dataset.v:null);return}
+});
+
+/* ================= boot ================= */
+(async function boot(){
+  applyDicts();applyStatic();buildHeader();syncSettings();
+  try{
+    LEX=await getJSON("data/lex.json");
+    await route();
+    for(const b of BOOKS)loadBook(b[0]);
+  }catch(e){$("#reader").innerHTML=`<div class="banner">${T("Не удалось загрузить данные","Could not load the data")}: ${esc(e.message)}. ${T("Обновите страницу.","Reload the page.")}</div>`}
+  window.addEventListener("hashchange",route);
+})();
+</script>
+</body>
+</html>
