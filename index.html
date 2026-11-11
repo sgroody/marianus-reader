@@ -85,10 +85,15 @@ body.v-tr .side{border-left:0;padding-left:0;font-size:18px}
 .colhead{display:none}
 body.v-both .colhead{display:grid;grid-template-columns:2.4rem minmax(0,1.2fr) minmax(0,1fr);column-gap:14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--rule)}
 body.v-both .colhead span:nth-child(3){padding-left:14px}
+.chapnav{display:flex;justify-content:space-between;gap:10px;margin:0 0 14px}
+.chapnav.bottom{margin:26px 0 8px;padding-top:16px;border-top:1px solid var(--rule)}
+.chapstep{border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:14px;color:var(--ink)}
+.chapstep:hover{border-color:var(--cinnabar);color:var(--cinnabar)}
+.chapnav.bottom .chapstep{padding:10px 18px;font-size:15px}
 .pblock{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:22px;padding:14px 0 16px;border-bottom:1px solid var(--rule)}
 .pblock .pocs{grid-column:1;grid-row:1}
-.pblock .side{grid-column:2;grid-row:1;padding-top:4px;line-height:1.65}
-.pblock .app{grid-column:1 / -1;margin-top:8px}
+.pblock .side{grid-column:2;grid-row:1 / span 2;padding-top:4px;line-height:1.65;align-self:start}
+.pblock .app{grid-column:1;grid-row:2;margin-top:8px;align-self:start}
 .vin{font-size:10.5px;vertical-align:super;line-height:0;margin:0 3px 0 1px;border-radius:3px;padding:0 1px}
 .vin.flash{background:var(--gold)}
 body.lay-cols .colhead{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:22px}
@@ -216,6 +221,7 @@ dialog::backdrop{background:rgba(0,0,0,.35)}
   body.v-both .verse > .side{grid-column:2;grid-row:auto;border-left:0;padding-left:0;border-top:1px dashed var(--rule);margin-top:4px}
   body.v-both .colhead{display:none}
   .pblock{grid-template-columns:minmax(0,1fr)}
+  .pblock .app{grid-column:1;grid-row:auto}
   .pblock .side{grid-column:1;grid-row:auto;border-left:0;padding-left:0;border-top:1px dashed var(--rule);margin-top:8px;padding-top:8px}
   .verse{grid-template-columns:2rem minmax(0,1fr);column-gap:8px}
   aside.desk{top:auto;left:0;width:100%;height:78vh;border-left:0;border-radius:14px 14px 0 0;padding-left:env(safe-area-inset-left,0px);
@@ -349,6 +355,7 @@ a.brand{text-decoration:none;color:inherit}
     <fieldset><legend data-i="lgLines"></legend>
       <label><input type="checkbox" id="p-gr"> <span data-i="pGr"></span></label>
       <label><input type="checkbox" id="p-syn"> <span data-i="pSyn"></span></label>
+      <label id="lab-cas" hidden><input type="checkbox" id="p-cas"> <span>Перевод еп. Кассиана, 1970</span></label>
       <label><input type="checkbox" id="p-rfb"> <span data-i="pRfb"></span></label>
       <label><input type="checkbox" id="p-kjv"> King James Version, 1769</label>
       <label><input type="checkbox" id="p-web"> World English Bible</label>
@@ -401,7 +408,7 @@ function applyStatic(){
   $("#chap").setAttribute("aria-label",T("Глава","Chapter"));
   $("#desk").setAttribute("aria-label",T("Разбор слова","Word analysis"));
   $("#sideSel").setAttribute("aria-label",T("Перевод для параллельной колонки","Translation for the parallel column"));
-  $("#sideSel").innerHTML=SIDE_KEYS.map(k=>`<option value="${k}">${esc(sideName(k,true))}</option>`).join("");
+  $("#sideSel").innerHTML=SIDE_KEYS.filter(k=>k!=="cas"||CAS).map(k=>`<option value="${k}">${esc(sideName(k,true))}</option>`).join("");
 }
 
 /* ================= constants ================= */
@@ -410,12 +417,13 @@ const BOOKS=[["MATT","от Матфея","Мф",28,"Matthew","Mt"],["MARK","от
 const BK=Object.fromEntries(BOOKS.map(b=>[b[0],b]));
 const bookName=c=>T("Евангелие "+BK[c][1],"Gospel of "+BK[c][4]);
 const bookAbbr=c=>T(BK[c][2],BK[c][5]);
-const PAR_KEYS=["gr","syn","rfb","kjv","web"];
-const PAR_TAG={gr:["Гр","Gk"],syn:["СП","Syn"],rfb:["БС","RFB"],kjv:["KJV","KJV"],web:["WEB","WEB"]};
-const SIDE_KEYS=["syn","rfb","gr","kjv","web"];
+const PAR_KEYS=["gr","syn","cas","rfb","kjv","web"];
+const PAR_TAG={cas:["Кас","Kas"],gr:["Гр","Gk"],syn:["СП","Syn"],rfb:["БС","RFB"],kjv:["KJV","KJV"],web:["WEB","WEB"]};
+const SIDE_KEYS=["syn","cas","rfb","gr","kjv","web"];
+let CAS=null; // Bishop Kassian, private copy only
 function sideName(k,short){
-  const N={syn:["Синодальный перевод","Russian Synodal (1876)"],rfb:["Библия свободы","Russian Freedom Bible"],gr:["Греческий (Тишендорф)","Greek (Tischendorf)"],kjv:["King James Version","King James Version"],web:["World English Bible","World English Bible"]};
-  const Sh={syn:["Синодальный","Russian Synodal"],rfb:["Библия свободы","Russian Freedom Bible"],gr:["Греческий","Greek"],kjv:["KJV","KJV"],web:["WEB","WEB"]};
+  const N={cas:["Перевод еп. Кассиана (1970)","Bishop Kassian (1970)"],syn:["Синодальный перевод","Russian Synodal (1876)"],rfb:["Библия свободы","Russian Freedom Bible"],gr:["Греческий (Тишендорф)","Greek (Tischendorf)"],kjv:["King James Version","King James Version"],web:["World English Bible","World English Bible"]};
+  const Sh={cas:["Кассиан","Kassian"],syn:["Синодальный","Russian Synodal"],rfb:["Библия свободы","Russian Freedom Bible"],gr:["Греческий","Greek"],kjv:["KJV","KJV"],web:["WEB","WEB"]};
   const x=(short?Sh:N)[k];return T(x[0],x[1]);
 }
 const POS_RU={"A-":"прилагательное","Df":"наречие / частица","S-":"артикль","Ma":"количественное числительное","Nb":"существительное","C-":"сочинительный союз",
@@ -482,10 +490,11 @@ function applyDicts(){
 
 /* ================= state ================= */
 const RU_BROWSER=/^ru|^uk|^be/i.test(navigator.language||"");
-const DEF={book:"MATT",ch:5,script:"cyr",par:{gr:false,syn:false,rfb:false,kjv:false,web:false},gloss:"notes",thr:20,parseIl:false,tab:"parse",view:"both",
+const DEF={book:"MATT",ch:5,script:"cyr",par:{gr:false,syn:false,cas:false,rfb:false,kjv:false,web:false},gloss:"notes",thr:20,parseIl:false,tab:"parse",view:"both",
   side:"syn",lang:"ru",v:1,seen:false,layout:"verse"};
 let S=Object.assign({},DEF,{par:Object.assign({},DEF.par)});
-try{const s=JSON.parse(localStorage.getItem("marianus.v2")||"null");if(s){Object.assign(S,s);S.par=Object.assign({},DEF.par,s.par||{});}}catch(e){}
+let FRESH=true; // no saved settings yet
+try{const s=JSON.parse(localStorage.getItem("marianus.v2")||"null");if(s){FRESH=false;Object.assign(S,s);S.par=Object.assign({},DEF.par,s.par||{});}}catch(e){}
 function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang,v:S.v,seen:S.seen,layout:S.layout}))}catch(e){}}
 let LEX=null; const B={}; let sel=null; // {kind:'c'|'g', id}
 const IX={tok:{},loc:{},lem:{},kids:{},gtok:{},gloc:{},glem:{},g2c:{}};
@@ -556,7 +565,12 @@ function shortParse(t){
 
 /* ================= data loading ================= */
 async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(u+" "+r.status);return r.json()}
+function attachCas(code){
+  const d=B[code],c=CAS&&CAS[code];if(!d||!c)return;
+  for(const [ch,vs] of Object.entries(d.chapters))for(const v of vs){const t=c[ch]&&c[ch][v.v];if(t)v.cas=t}
+}
 function indexBook(code){
+  attachCas(code);
   const d=B[code];
   for(const [ch,vs] of Object.entries(d.chapters)){
     for(const v of vs){
@@ -608,6 +622,7 @@ function syncSettings(){
   for(const b of $("#scriptSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.script));
   for(const b of $("#glossSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.gloss));
   for(const k of PAR_KEYS)$("#p-"+k).checked=!!S.par[k];
+  $("#lab-cas").hidden=!CAS;
   $("#thr").value=S.thr;$("#parseIl").checked=!!S.parseIl;
   for(const b of $("#viewSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.view));
   document.body.classList.remove("v-ocs","v-both","v-tr");document.body.classList.add("v-"+S.view);
@@ -622,6 +637,17 @@ function syncNav(){
   $("#books").innerHTML=BOOKS.map(b=>`<button data-b="${b[0]}" title="${esc(bookName(b[0]))}" aria-pressed="${b[0]===S.book}">${bookAbbr(b[0])}</button>`).join("");
   const n=BK[S.book][3];
   $("#chap").innerHTML=Array.from({length:n},(_,i)=>`<option value="${i+1}"${i+1===S.ch?" selected":""}>${T("Глава","Chapter")} ${i+1}</option>`).join("");
+}
+function stepTarget(d){
+  let i=BOOKS.findIndex(b=>b[0]===S.book),ch=S.ch+d;
+  if(ch<1){if(i===0)return null;i--;ch=BOOKS[i][3]}
+  else if(ch>BOOKS[i][3]){if(i===BOOKS.length-1)return null;i++;ch=1}
+  return [BOOKS[i][0],ch];
+}
+function chapNavHTML(where){
+  const p=stepTarget(-1),n=stepTarget(1);
+  const b=(t,d,lab)=>t?`<button class="chapstep" data-d="${d}">${d<0?"‹ ":""}${lab} ${esc(bookAbbr(t[0]))} ${t[1]}${d>0?" ›":""}</button>`:"<span></span>";
+  return `<nav class="chapnav ${where}" aria-label="${T("Главы","Chapters")}">${b(p,-1,T("Пред.:","Previous:"))}${b(n,1,T("След.:","Next:"))}</nav>`;
 }
 function step(d){
   let i=BOOKS.findIndex(b=>b[0]===S.book),ch=S.ch+d;
@@ -689,21 +715,20 @@ function colsHTML(d,vs,anyOcs){
         if(r[3]<=S.thr&&r[1]!=="Ne"&&!seen.has(li)){seen.add(li);const g=shortGloss(li);if(g)items.push(`<b>${esc(scr(clean(r[0])))}</b> ${esc(g)}`)}}
     }
     if(!anyOcs&&!ocs)ocs=`<span class="vn vin" id="v-${b[0].v}" data-v="${b[0].v}"></span>`;
-    return `<div class="pblock"><div class="ocs pocs">${ocs}</div><div class="side${S.side==="gr"?" gr":""}">${side}</div>${items.length?`<div class="app">${items.join(" · ")}</div>`:""}</div>`;
+    return `<div class="pblock"><div class="ocs pocs">${ocs}</div>${items.length?`<div class="app">${items.join(" · ")}</div>`:""}<div class="side${S.side==="gr"?" gr":""}">${side}</div></div>`;
   }).join("");
 }
 function renderChapter(){
   const d=B[S.book];if(!d)return;
   const vs=d.chapters[S.ch]||[];
   const anyOcs=vs.some(v=>v.c&&v.c.length);
-  let h=`<h1 class="chap">${esc(bookName(S.book))} · <span class="num">${S.ch}</span></h1>
-   <div class="sub">${T("Нажмите на слово: форма, лемма, значение и греческий оригинал","Click any word for its form, dictionary form, meaning and the Greek original")}
-    · <a href="https://bible.by/cas/${{MATT:40,MARK:41,LUKE:42,JOHN:43}[S.book]}/${S.ch}/" target="_blank" rel="noopener">${T(`Перевод еп. Кассиана, гл. ${S.ch} ↗`,`Bishop Kassian’s Russian translation, ch. ${S.ch} ↗`)}</a></div>
+  let h=chapNavHTML("top")+`<h1 class="chap">${esc(bookName(S.book))} · <span class="num">${S.ch}</span></h1>
+   <div class="sub">${T("Нажмите на слово: форма, лемма, значение и греческий оригинал","Click any word for its form, dictionary form, meaning and the Greek original")}</div>
    <div class="colhead"><span></span><span>${T("Мариинское евангелие","Codex Marianus (Old Church Slavonic)")}</span><span>${esc(sideName(S.side))}</span></div>`;
   if(!anyOcs) h+=`<div class="banner">${T("Мариинский кодекс эту главу не сохранил (рукопись начинается с Мф 5:24). Ниже — греческий текст и переводы; старославянский текст начнётся с Мф 5:24.","The Codex Marianus does not preserve this chapter: the manuscript begins at Matthew 5:24. The Greek and the translations are shown; the Slavonic starts at Mt 5:24.")}</div>`;
   else if(vs.some(v=>!v.c)) h+=`<div class="banner">${T("В этой главе есть стихи, которых нет в рукописи или которые пока не размечены в PROIEL; они отмечены как лакуны.","Some verses in this chapter are missing from the manuscript or not yet annotated in PROIEL; they are marked as gaps.")}</div>`;
   if(S.view==="both"&&S.layout==="cols"){
-    h+=colsHTML(d,vs,anyOcs);
+    h+=colsHTML(d,vs,anyOcs)+chapNavHTML("bottom");
     const r=$("#reader");r.innerHTML=h;r.classList.toggle("il",S.gloss==="il");
     if(sel)paintSel();return;
   }
@@ -731,10 +756,12 @@ function renderChapter(){
     if(!ocs&&!par&&!sideX)continue;
     h+=`<div class="verse" id="v-${v.v}"><div class="vg"><span class="vn" data-v="${v.v}" title="${T("Ссылка на стих","Link to this verse")}">${v.v}</span></div><div class="ocs">${ocs}</div>${side}${app}${par}</div>`;
   }
+  h+=chapNavHTML("bottom");
   const r=$("#reader");r.innerHTML=h;r.classList.toggle("il",S.gloss==="il");
   if(sel)paintSel();
 }
 $("#reader").addEventListener("click",e=>{
+  const cs=e.target.closest(".chapstep");if(cs){step(+cs.dataset.d);return}
   const w=e.target.closest(".w");if(w){select("c",w.dataset.id);return}
   const g=e.target.closest(".g");if(g){select("g",g.dataset.g);return}
   const vn=e.target.closest(".vn");if(vn){go(S.book,S.ch,+vn.dataset.v)}
@@ -1190,7 +1217,7 @@ function openAbout(){
    <li><b>Russian Freedom Bible</b> (eBible.org), public domain, modern Russian, published as a draft.</li>
    <li><b>KJV</b> (1769) and the <b>World English Bible</b>, public domain.</li></ul>
   <h3>Is there a Russian NRSV?</h3>
-  <p>The closest are Bishop Kassian’s New Testament (1970), a committee translation from the critical Greek text, and the Russian Bible Society’s Modern Russian Translation (2011). Both are under copyright and cannot be included.</p>
+  <p>The closest are Bishop Kassian’s New Testament (1970), a committee translation from the critical Greek text, and the Russian Bible Society’s Modern Russian Translation (2011). Both are under copyright (Kassian’s is managed in Russia by the Russian Bible Society).${CAS?" <b>This private copy includes Kassian’s translation for personal study</b>; the public site does not.":" They are not included on the public site."}</p>
   <h3>Dictionaries and grammars</h3><ul>
    <li><b>Staroslavjanskij slovar’ (po rukopisjam X–XI vv.)</b>, ed. Cejtlin, Večerka, Blagova (1994): the best one-volume OCS dictionary for Russian speakers, with Greek parallels.</li>
    <li><b>Gorazd</b> (gorazd.org): the digital Slovník jazyka staroslověnského (Prague), about 19,000 entries.</li>
@@ -1211,7 +1238,7 @@ function openAbout(){
    <li><b>«Библия свободы»</b> (eBible.org), общественное достояние. Современный язык, но это <i>черновой</i> перевод, а не комитетский.</li>
    <li><b>KJV</b> (1769) и <b>World English Bible</b>, общественное достояние.</li></ul>
   <h3>Есть ли русский аналог NRSV?</h3>
-  <p>Ближе всего — <b>Новый Завет в переводе еп. Кассиана (Безобразова)</b>, 1970, сделанный комиссией по критическому греческому тексту; по типу он близок к RSV/NRSV. Также <b>«Современный русский перевод» РБО</b> (2011, ближе к NIV/GNT по стилю). Оба защищены авторским правом и не могут быть встроены сюда, но доступны на bible.by и azbyka.ru.</p>
+  <p>Ближе всего — <b>Новый Завет в переводе еп. Кассиана (Безобразова)</b>, 1970, сделанный комиссией по критическому греческому тексту; по типу он близок к RSV/NRSV. Также <b>«Современный русский перевод» РБО</b> (2011, ближе к NIV/GNT по стилю). Оба защищены авторским правом (права на перевод Кассиана в России управляет РБО).${CAS?" <b>В эту частную копию перевод Кассиана включён для личных занятий</b>; на публичном сайте его нет.":" На публичный сайт они не включены; оба доступны на bible.by и azbyka.ru."}</p>
   <h3>Словари и грамматики</h3><ul>
    <li><b>Старославянский словарь (по рукописям X–XI вв.)</b>, ред. Р. М. Цейтлин, Р. Вечерка, Э. Благова (1994): лучший однотомник для русскоязычного читателя, с греческими параллелями.</li>
    <li><b>Gorazd</b> (gorazd.org): цифровой «Slovník jazyka staroslověnského» (Прага), ~19 000 статей, с русскими, греческими и латинскими эквивалентами.</li>
@@ -1251,8 +1278,8 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 const COV={"MATT":[[25,1,25],[23,1,23],[17,1,17],[25,1,25],[48,1,23],[34],[29,4,4],[34],[38,7,7],[42,31,31],[30],[50,42,42],[58],[36],[39],[28],[27],[35],[30],[34],[46],[46],[39,39,39],[51],[46],[75],[66],[20]],"MARK":[[45],[28,28,28],[35],[41],[43],[56],[37],[38],[50],[52],[33],[44],[37],[72],[47],[20]],"LUKE":[[80],[52],[38],[44],[39],[49],[50],[56],[62],[42],[54],[59],[35],[35],[32],[31],[37,37,37],[43],[48],[47],[38],[71],[56],[53]],"JOHN":[[52,1,22],[25],[36],[54],[47],[71],[53,53,53],[59],[41],[42],[57],[50],[38],[31],[27],[33],[26],[40,14,28],[42],[31],[24,18,24]]};
 function setLang(v){
   if(v===S.lang)return;S.lang=v;
-  if(S.lang==="en"&&(S.side==="syn"||S.side==="rfb"))S.side="web";
-  if(S.lang==="ru"&&(S.side==="web"||S.side==="kjv"))S.side="syn";
+  if(S.lang==="en"&&(S.side==="syn"||S.side==="rfb"||S.side==="cas"))S.side="web";
+  if(S.lang==="ru"&&(S.side==="web"||S.side==="kjv"))S.side=CAS?"cas":"syn";
   save();refreshAll();
 }
 const atHome=()=>document.body.classList.contains("at-home");
@@ -1439,6 +1466,9 @@ $("#home").addEventListener("click",e=>{
   applyDicts();applyStatic();buildHeader();syncSettings();
   try{
     LEX=await getJSON("data/lex.json");
+    try{const r=await fetch("data/cas.json");if(r.ok){CAS=await r.json();for(const b of Object.keys(B))attachCas(b);applyStatic();syncSettings()}}catch(e){}
+    if(!CAS&&S.side==="cas")S.side="syn";
+    if(CAS&&FRESH&&S.lang==="ru"){S.side="cas";syncSettings()}
     await route();
     for(const b of BOOKS)loadBook(b[0]);
   }catch(e){$("#reader").innerHTML=`<div class="banner">${T("Не удалось загрузить данные","Could not load the data")}: ${esc(e.message)}. ${T("Обновите страницу.","Reload the page.")}</div>`}
