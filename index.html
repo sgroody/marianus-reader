@@ -85,6 +85,14 @@ body.v-tr .side{border-left:0;padding-left:0;font-size:18px}
 .colhead{display:none}
 body.v-both .colhead{display:grid;grid-template-columns:2.4rem minmax(0,1.2fr) minmax(0,1fr);column-gap:14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--rule)}
 body.v-both .colhead span:nth-child(3){padding-left:14px}
+.pblock{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:22px;padding:14px 0 16px;border-bottom:1px solid var(--rule)}
+.pblock .pocs{grid-column:1;grid-row:1}
+.pblock .side{grid-column:2;grid-row:1;padding-top:4px;line-height:1.65}
+.pblock .app{grid-column:1 / -1;margin-top:8px}
+.vin{font-size:10.5px;vertical-align:super;line-height:0;margin:0 3px 0 1px;border-radius:3px;padding:0 1px}
+.vin.flash{background:var(--gold)}
+body.lay-cols .colhead{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:22px}
+body.lay-cols .colhead span:first-child{display:none}
 .verse:target,.verse.flash{background:linear-gradient(90deg,var(--gold),transparent 70%)}
 .ocs{font-family:var(--f-ocs);font-size:23px;line-height:1.7}
 .script-glag .ocs,.script-glag .pform{font-family:var(--f-glag);font-size:21px}
@@ -207,6 +215,8 @@ dialog::backdrop{background:rgba(0,0,0,.35)}
   body.v-both .verse{grid-template-columns:2rem minmax(0,1fr)}
   body.v-both .verse > .side{grid-column:2;grid-row:auto;border-left:0;padding-left:0;border-top:1px dashed var(--rule);margin-top:4px}
   body.v-both .colhead{display:none}
+  .pblock{grid-template-columns:minmax(0,1fr)}
+  .pblock .side{grid-column:1;grid-row:auto;border-left:0;padding-left:0;border-top:1px dashed var(--rule);margin-top:8px;padding-top:8px}
   .verse{grid-template-columns:2rem minmax(0,1fr);column-gap:8px}
   aside.desk{top:auto;left:0;width:100%;height:78vh;border-left:0;border-radius:14px 14px 0 0;padding-left:env(safe-area-inset-left,0px);
     transform:translateY(105%);box-shadow:0 -6px 24px rgba(0,0,0,.18)}
@@ -322,6 +332,7 @@ a.brand{text-decoration:none;color:inherit}
     </div>
     <div class="viewsw">
       <div class="seg" id="viewSeg" role="group"><button data-v="ocs" data-i="vOcs"></button><button data-v="both" data-i="vBoth"></button><button data-v="tr" data-i="vTr"></button></div>
+      <div class="seg" id="layoutSeg" role="group"><button data-v="verse" data-i="lVerse"></button><button data-v="cols" data-i="lCols"></button></div>
       <select id="sideSel"></select>
     </div>
     <div class="tools">
@@ -369,6 +380,7 @@ const T=(ru,en)=>S.lang==="en"?en:ru;
 const UI={
  brand:["Мариинское евангелие","Marianus Reader"],
  vOcs:["Слав.","Slavonic"],vBoth:["Оба","Both"],vTr:["Перевод","Translation"],
+ lVerse:["По стихам","Verse rows"],lCols:["Колонками","Columns"],
  setBtn:["Вид","View"],aboutBtn:["Источники","Sources"],
  lgScript:["Письмо","Script"],sCyr:["Кириллица","Cyrillic"],sGlag:["Глаголица","Glagolitic"],sLat:["Латиница","Latin"],
  scriptNote:["Глаголица и латиница — автоматическая транслитерация; рукопись написана глаголицей.","Glagolitic and Latin are automatic transliterations. The manuscript itself is in Glagolitic. In English mode, Latin also transliterates the Cyrillic examples in notes."],
@@ -471,10 +483,10 @@ function applyDicts(){
 /* ================= state ================= */
 const RU_BROWSER=/^ru|^uk|^be/i.test(navigator.language||"");
 const DEF={book:"MATT",ch:5,script:"cyr",par:{gr:false,syn:false,rfb:false,kjv:false,web:false},gloss:"notes",thr:20,parseIl:false,tab:"parse",view:"both",
-  side:"syn",lang:"ru",v:1,seen:false};
+  side:"syn",lang:"ru",v:1,seen:false,layout:"verse"};
 let S=Object.assign({},DEF,{par:Object.assign({},DEF.par)});
 try{const s=JSON.parse(localStorage.getItem("marianus.v2")||"null");if(s){Object.assign(S,s);S.par=Object.assign({},DEF.par,s.par||{});}}catch(e){}
-function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang,v:S.v,seen:S.seen}))}catch(e){}}
+function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang,v:S.v,seen:S.seen,layout:S.layout}))}catch(e){}}
 let LEX=null; const B={}; let sel=null; // {kind:'c'|'g', id}
 const IX={tok:{},loc:{},lem:{},kids:{},gtok:{},gloc:{},glem:{},g2c:{}};
 let concFilter=null;
@@ -582,6 +594,7 @@ function buildHeader(){
   $("#parseIl").onchange=e=>{S.parseIl=e.target.checked;save();renderChapter()};
   $("#viewSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.view=b.dataset.v;save();syncSettings();renderChapter()};
   $("#sideSel").onchange=e=>{S.side=e.target.value;save();renderChapter()};
+  $("#layoutSeg").onclick=e=>{const b=e.target.closest("button");if(!b||b.dataset.v===S.layout)return;capturePos();S.layout=b.dataset.v;save();syncSettings();renderChapter();const el=document.getElementById(`v-${S.v}`);if(el&&S.v>1)el.scrollIntoView({block:"center"})};
 }
 function refreshAll(){
   applyDicts();applyStatic();if(atHome())renderHome();syncSettings();syncNav();renderChapter();
@@ -599,6 +612,9 @@ function syncSettings(){
   for(const b of $("#viewSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.view));
   document.body.classList.remove("v-ocs","v-both","v-tr");document.body.classList.add("v-"+S.view);
   $("#sideSel").value=S.side;$("#sideSel").hidden=S.view==="ocs";
+  for(const b of $("#layoutSeg").children)b.setAttribute("aria-pressed",String(b.dataset.v===S.layout));
+  $("#layoutSeg").setAttribute("aria-label",T("Раскладка","Layout"));
+  $("#layoutSeg").hidden=S.view!=="both";document.body.classList.toggle("lay-cols",S.view==="both"&&S.layout==="cols");
   latinTree($("header.top"));
 }
 function syncNav(){
@@ -625,7 +641,7 @@ async function route(){
   const m=/^#(MATT|MARK|LUKE|JOHN)-(\d+)(?:-(\d+))?$/.exec(location.hash||"");
   let book=S.book,ch=S.ch,verse=null;
   if(m){book=m[1];ch=Math.min(+m[2],BK[book][3])||1;verse=m[3]?+m[3]:null}
-  const changed=book!==S.book||ch!==S.ch||!$("#reader .verse");
+  const changed=book!==S.book||ch!==S.ch||!$("#reader [id^='v-']");
   if(changed||verse)S.v=verse||1;
   S.book=book;S.ch=ch;S.seen=true;save();syncNav();
   if(!B[book]){$("#reader").innerHTML=`<div class="loading">${T("Загрузка текста…","Loading text…")}</div>`;await loadBook(book)}
@@ -651,15 +667,46 @@ function wordHTML(id,t){
   }
   return `${before}<span class="${cls}" data-id="${id}" data-l="${li}">${esc(scr(t[0]))}</span>${afterH}`;
 }
+
+/* Running text in two aligned columns (Slavonic | translation), broken into blocks at sentence ends so the columns stay level. */
+function sideTextHTML(d,v,k){
+  if(k==="gr")return (v.gr||[]).map(g=>{const x=d.gtok[g];return `${x[4]?esc(x[4]):""}<span class="g" data-g="${g}">${esc(x[0])}</span>${esc(x[3]==null?" ":x[3])}`}).join("");
+  return v[k]?(k==="kjv"?v[k]:esc(v[k])):"";
+}
+function colsHTML(d,vs,anyOcs){
+  const blocks=[];let cur=[];
+  vs.forEach((v,i)=>{cur.push(v);
+    const t=String(v[S.side==="gr"?"web":S.side]||"").replace(/<[^>]*>/g,"").trim();
+    if(i===vs.length-1||cur.length>=8||(cur.length>=3&&/[.!?»”"]$/.test(t))){blocks.push(cur);cur=[]}});
+  return blocks.map(b=>{
+    let ocs="",side="";const seen=new Set(),items=[];
+    for(const v of b){
+      const ocsV=v.c&&v.c.length?v.c.map(id=>wordHTML(id,d.tok[id])).join(""):(anyOcs?`<span class="lac">${T("лакуна","gap")}</span> `:"");
+      if(ocsV||anyOcs)ocs+=`<span class="vn vin" id="v-${v.v}" data-v="${v.v}" title="${T("Ссылка на стих","Link to this verse")}">${v.v}</span>${ocsV} `;
+      const sx=sideTextHTML(d,v,S.side);
+      side+=`<span class="vn vin" data-v="${v.v}">${v.v}</span>${sx||`<span class="lac">${T("нет текста","no text")}</span>`} `;
+      if(S.gloss==="notes"&&v.c)for(const id of v.c){const t=d.tok[id];if(!t[0])continue;const li=t[1];const r=LEX.cl[li];
+        if(r[3]<=S.thr&&r[1]!=="Ne"&&!seen.has(li)){seen.add(li);const g=shortGloss(li);if(g)items.push(`<b>${esc(scr(clean(r[0])))}</b> ${esc(g)}`)}}
+    }
+    if(!anyOcs&&!ocs)ocs=`<span class="vn vin" id="v-${b[0].v}" data-v="${b[0].v}"></span>`;
+    return `<div class="pblock"><div class="ocs pocs">${ocs}</div><div class="side${S.side==="gr"?" gr":""}">${side}</div>${items.length?`<div class="app">${items.join(" · ")}</div>`:""}</div>`;
+  }).join("");
+}
 function renderChapter(){
   const d=B[S.book];if(!d)return;
   const vs=d.chapters[S.ch]||[];
   const anyOcs=vs.some(v=>v.c&&v.c.length);
   let h=`<h1 class="chap">${esc(bookName(S.book))} · <span class="num">${S.ch}</span></h1>
-   <div class="sub">${T("Нажмите на слово: форма, лемма, значение и греческий оригинал","Click any word for its form, dictionary form, meaning and the Greek original")}</div>
+   <div class="sub">${T("Нажмите на слово: форма, лемма, значение и греческий оригинал","Click any word for its form, dictionary form, meaning and the Greek original")}
+    · <a href="https://bible.by/cas/${{MATT:40,MARK:41,LUKE:42,JOHN:43}[S.book]}/${S.ch}/" target="_blank" rel="noopener">${T(`Перевод еп. Кассиана, гл. ${S.ch} ↗`,`Bishop Kassian’s Russian translation, ch. ${S.ch} ↗`)}</a></div>
    <div class="colhead"><span></span><span>${T("Мариинское евангелие","Codex Marianus (Old Church Slavonic)")}</span><span>${esc(sideName(S.side))}</span></div>`;
   if(!anyOcs) h+=`<div class="banner">${T("Мариинский кодекс эту главу не сохранил (рукопись начинается с Мф 5:24). Ниже — греческий текст и переводы; старославянский текст начнётся с Мф 5:24.","The Codex Marianus does not preserve this chapter: the manuscript begins at Matthew 5:24. The Greek and the translations are shown; the Slavonic starts at Mt 5:24.")}</div>`;
   else if(vs.some(v=>!v.c)) h+=`<div class="banner">${T("В этой главе есть стихи, которых нет в рукописи или которые пока не размечены в PROIEL; они отмечены как лакуны.","Some verses in this chapter are missing from the manuscript or not yet annotated in PROIEL; they are marked as gaps.")}</div>`;
+  if(S.view==="both"&&S.layout==="cols"){
+    h+=colsHTML(d,vs,anyOcs);
+    const r=$("#reader");r.innerHTML=h;r.classList.toggle("il",S.gloss==="il");
+    if(sel)paintSel();return;
+  }
   for(const v of vs){
     let ocs="";
     if(v.c&&v.c.length){ocs=v.c.map(id=>wordHTML(id,d.tok[id])).join("")}
@@ -1186,8 +1233,14 @@ let posTimer=null;
 function capturePos(){
   if(atHome())return;
   const mid=innerHeight/2+6; // small allowance so a verse edge exactly at mid-screen counts for the next verse
-  for(const el of document.querySelectorAll("#reader .verse")){const r=el.getBoundingClientRect();
-    if(r.bottom>mid){const v=+el.id.slice(2);if(v!==S.v){S.v=v;save()}return}}
+  // the last verse that starts above the middle of the screen (verse rows or inline verse numbers)
+  let v=null;
+  const els=document.querySelectorAll("#reader [id^='v-']");
+  if(document.body.classList.contains("lay-cols")){
+    // running text: several verse numbers can share a line, so take the first one on the line nearest mid-screen (stable on resume)
+    let best=1e9;for(const el of els){const r=el.getBoundingClientRect(),dd=Math.round(Math.abs((r.top+r.bottom)/2-innerHeight/2));if(dd<best){best=dd;v=+el.id.slice(2)}}
+  } else for(const el of els){if(el.getBoundingClientRect().top<=mid)v=+el.id.slice(2);else break}
+  if(v&&v!==S.v){S.v=v;save()}
 }
 function trackPos(){clearTimeout(posTimer);posTimer=setTimeout(capturePos,250)}
 window.addEventListener("scroll",trackPos,{passive:true});
