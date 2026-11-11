@@ -462,7 +462,7 @@ function applyDicts(){
 /* ================= state ================= */
 const RU_BROWSER=/^ru|^uk|^be/i.test(navigator.language||"");
 const DEF={book:"MATT",ch:5,script:"cyr",par:{gr:false,syn:false,rfb:false,kjv:false,web:false},gloss:"notes",thr:20,parseIl:false,tab:"parse",view:"both",
-  side:RU_BROWSER?"syn":"web",lang:RU_BROWSER?"ru":"en"};
+  side:"syn",lang:"ru"};
 let S=Object.assign({},DEF,{par:Object.assign({},DEF.par)});
 try{const s=JSON.parse(localStorage.getItem("marianus.v2")||"null");if(s){Object.assign(S,s);S.par=Object.assign({},DEF.par,s.par||{});}}catch(e){}
 function save(){try{localStorage.setItem("marianus.v2",JSON.stringify({book:S.book,ch:S.ch,script:S.script,par:S.par,gloss:S.gloss,thr:S.thr,parseIl:S.parseIl,tab:S.tab,view:S.view,side:S.side,lang:S.lang}))}catch(e){}}
