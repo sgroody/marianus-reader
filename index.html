@@ -1151,7 +1151,7 @@ function tabGreek(gid,t){
   if(ent.length){const mx=ent[0][1];
     h+=`<h3>${T("Как Мариинский кодекс переводит","How the Marianus translates")} ${esc(clean(gl[0]))}</h3><div class="bars">`+ent.map(([l,c])=>`<span class="o">${esc(scr(clean(LEX.cl[l][0])))}</span><span class="b" style="width:${Math.max(4,c/mx*100)}%"></span><span class="n">${c}</span>`).join("")+`</div>
      <div class="muted" style="font-size:12.5px">${T(`${occ.length} употреблений в греческом тексте Евангелий${loadedNote()}. Полный список — во вкладке «Конкорданция».`,`${occ.length} occurrences in the Greek Gospels${loadedNote()}. The full list is in the Concordance tab.`)}</div>`;}
-  h+=`<div class="ext"><a href="https://logeion.uchicago.edu/${encodeURIComponent(clean(gl[0]))}" target="_blank" rel="noopener">Logeion (LSJ…)</a>`+
+  h+=`<div class="ext"><a href="https://dhonorare.ru/lexicon/greek/${encodeURIComponent(clean(gl[0]))}" target="_blank" rel="noopener">${T("Дворецкий","Dvoretsky")}</a><a href="https://logeion.uchicago.edu/${encodeURIComponent(clean(gl[0]))}" target="_blank" rel="noopener">Logeion (LSJ…)</a>`+
      (gl[2]?`<a href="https://www.blueletterbible.org/lexicon/g${gl[2]}/kjv/tr/0-1/" target="_blank" rel="noopener">Strong G${gl[2]} · BLB</a>`:"")+
      `<button data-copy="${esc(clean(gl[0]))}">${T("Копировать лемму","Copy lemma")}</button></div>`;
   if(sel.kind==="c")h+=`<p class="muted" style="font-size:12.5px;margin-top:10px">${T("Можно нажимать и на греческие слова в колонке или строке «Гр»: подсветится их славянский перевод.","You can also click Greek words in the Greek column or line; their Slavonic translation lights up.")}</p>`;
@@ -1193,12 +1193,21 @@ function tabDict(li){
   if(S.lang==="en"&&enLemmaGloss(li))h+=`<h3>English gloss</h3><div>${esc(enLemmaGloss(li))}</div><div class="muted" style="font-size:12.5px">Derived from the Greek word this lemma most often translates (Dodson lexicon).</div>`;
   if(eq.length){h+=`<h3>${T("Греческие соответствия в Евангелиях","Greek equivalents in the Gospels")}</h3><ul class="syn">`+eq.map(([g,n])=>{const gl=LEX.gl[g];return `<li><span class="gk">${esc(clean(gl[0]))}</span> ×${n} — ${esc(gl[3]||"")}</li>`}).join("")+`</ul>
     <div class="muted" style="font-size:12.5px">${T("Так устроен и «Старославянский словарь» (1994): значение задаётся через греческое слово, которое переводит писец.","The standard OCS dictionary (Staroslavjanskij slovar’, 1994) works the same way: meanings are given through the Greek word the scribe was translating.")}</div>`}
-  h+=`<h3>${T("Открыть в словарях","Look it up")}</h3><div class="ext">
-   <a href="https://gorazd.org/gulliver/?envLang=${T("ru","en")}" target="_blank" rel="noopener">Gorazd (SJS)</a>
+  const g0=eq.length?clean(LEX.gl[eq[0][0]][0]):"";
+  h+=`<h3>${T("Старославянские словари","Old Church Slavonic dictionaries")}</h3><div class="ext">
+   <a href="https://gorazd.org/gulliver/?envLang=${T("ru","en")}" target="_blank" rel="noopener">${T("SJS (Прага) · Gorazd","SJS (Prague) · Gorazd")}</a>
    <button data-copy="${esc(lem)}">${T("Копировать","Copy")} «${esc(scr(lem))}»</button>
+   <a href="https://www.clarin.si/repository/xmlui/handle/11356/1666" target="_blank" rel="noopener">${T("Миклошич (1862–65), цифровое изд.","Miklosich (1862–65), digital ed.")}</a>
    <a href="https://en.wiktionary.org/wiki/${encodeURIComponent(lem)}#Old_Church_Slavonic" target="_blank" rel="noopener">Wiktionary</a>
-   <a href="https://archive.org/search?query=${encodeURIComponent("Lexicon palaeoslovenico-graeco-latinum Miklosich")}" target="_blank" rel="noopener">${T("Миклошич (1862–65)","Miklosich (1862–65)")}</a>
-  </div><p class="muted" style="font-size:12.5px">${T("В Gorazd вставьте лемму в поиск. Его основа — пражский «Slovník jazyka staroslověnského» с греческими, латинскими и русскими эквивалентами.","Paste the lemma into Gorazd’s search. It is the digital Prague Slovník jazyka staroslověnského, with Greek, Latin, Russian, German and English equivalents.")}</p>`;
+  </div><p class="muted" style="font-size:12.5px">${T("Главный словарь — пражский «Slovník jazyka staroslověnského» (SJS): все слова канонических памятников, с греческими, латинскими и русскими эквивалентами. В Gorazd вставьте лемму в поиск. Печатный «Старославянский словарь» (ред. Цейтлин, Вечерка, Благова, 1994) построен на том же материале.","The main dictionary is the Prague Slovník jazyka staroslověnského (SJS): every word of the canonical manuscripts, with Greek, Latin, Russian, German and English equivalents. Paste the lemma into Gorazd’s search. The printed Staroslavjanskij slovar’ (ed. Cejtlin, Večerka, Blagova, 1994) is based on the same material.")}</p>`;
+  if(g0)h+=`<h3>${T("Греческие словари","Greek dictionaries")} · <span class="gk">${esc(g0)}</span></h3><div class="ext">
+   <a href="https://dhonorare.ru/lexicon/greek/${encodeURIComponent(g0)}" target="_blank" rel="noopener">${T("Дворецкий","Dvoretsky (Greek–Russian)")}</a>
+   <a href="https://logeion.uchicago.edu/${encodeURIComponent(g0)}" target="_blank" rel="noopener">Logeion (LSJ…)</a>
+  </div>`;
+  h+=`<h3>${T("Грамматики онлайн","Grammars online")}</h3><div class="ext">
+   <a href="https://library.oapen.org/handle/20.500.12657/74795" target="_blank" rel="noopener">${T("Поливанова, грамматика и словари (англ., откр. доступ)","Polivanova, Grammar and Dictionaries (open access)")}</a>
+   <a href="https://lrc.la.utexas.edu/eieol_toc/ocsol" target="_blank" rel="noopener">Old Church Slavonic Online</a>
+  </div>`;
   return h;
 }
 
@@ -1220,12 +1229,18 @@ function openAbout(){
   <p>The closest are Bishop Kassian’s New Testament (1970), a committee translation from the critical Greek text, and the Russian Bible Society’s Modern Russian Translation (2011). Both are under copyright (Kassian’s is managed in Russia by the Russian Bible Society).${CAS?" <b>This private copy includes Kassian’s translation for personal study</b>; the public site does not.":" They are not included on the public site."}</p>
   <h3>Dictionaries and grammars</h3><ul>
    <li><b>Staroslavjanskij slovar’ (po rukopisjam X–XI vv.)</b>, ed. Cejtlin, Večerka, Blagova (1994): the best one-volume OCS dictionary for Russian speakers, with Greek parallels.</li>
-   <li><b>Gorazd</b> (gorazd.org): the digital Slovník jazyka staroslověnského (Prague), about 19,000 entries.</li>
-   <li><b>Miklosich, Lexicon palaeoslovenico-graeco-latinum</b> (1862–65): public domain, scans on archive.org.</li>
-   <li>Grammars: Xaburgaev and Remnëva (Russian); <b>Lunt</b>, <i>Old Church Slavonic Grammar</i> (English).</li>
-   <li>Greek: the free <b>Dodson</b> lexicon with Strong’s numbers is used here.</li></ul>
+   <li><b>Slovník jazyka staroslověnského</b> (SJS, Prague, 1958–97), the fullest OCS dictionary, searchable at <b>Gorazd</b> (gorazd.org).</li>
+   <li><b>Miklosich, Lexicon palaeoslovenico-graeco-latinum</b> (1862–65): public domain; digital edition at CLARIN.SI.</li>
+   <li>Grammars:
+     <ul>
+       <li><b>Lunt</b>, <i>Old Church Slavonic Grammar</i> (7th ed. 2001), the standard reference in English.</li>
+       <li><b>Polivanova</b>, <i>Old Church Slavic: Grammar and Dictionaries</i> (Firenze UP, 2023): free, open access.</li>
+       <li>Russian university textbooks: <b>Xaburgaev</b> and <b>Remnëva</b>.</li>
+       <li>Free course: <b>Old Church Slavonic Online</b> (University of Texas): graded lessons on original texts, with glossary.</li>
+     </ul></li>
+   <li>Greek: <b>BDAG</b> is the standard NT lexicon (not free); <b>LSJ</b> via Logeion and <b>Dvoretsky</b> (Greek–Russian) are linked for each Greek word. Short English glosses come from the free <b>Dodson</b> lexicon.</li></ul>
   <h3>How the help works</h3>
-  <p>Parses are not guessed: every word form was tagged by hand in PROIEL, and the notes in the Parse tab are generated from those tags. Forms shows the paradigm built from forms actually found in the Gospels. The model declension is chosen automatically and marked as likely. Russian glosses were written for all 2,893 non-name lemmas. English glosses are taken from the meaning of the Greek word each lemma most often translates.</p>
+  <p>Parses are not guessed: every word form was tagged by hand in PROIEL, and the notes in the Parse tab are generated from those tags. Forms shows the paradigm built from forms actually found in the Gospels. The model declension is chosen automatically and marked as likely. Russian glosses for all 2,893 non-name lemmas were written for this reader, checked against each word’s Greek equivalents; they are a reading aid, not a dictionary, so use SJS for exact meanings. English glosses are taken from the meaning of the Greek word each lemma most often translates.</p>
   <h3>Citation</h3>
   <p class="muted">Haug, D. T. T. &amp; Jøhndal, M. L. 2008. Creating a Parallel Treebank of the Old Indo-European Bible Translations. LaTeCH 2008. Data: github.com/syntacticus/syntacticus-treebank-data. Non-commercial use only.</p>`:`
   <h2>О чтеце</h2>
@@ -1241,12 +1256,18 @@ function openAbout(){
   <p>Ближе всего — <b>Новый Завет в переводе еп. Кассиана (Безобразова)</b>, 1970, сделанный комиссией по критическому греческому тексту; по типу он близок к RSV/NRSV. Также <b>«Современный русский перевод» РБО</b> (2011, ближе к NIV/GNT по стилю). Оба защищены авторским правом (права на перевод Кассиана в России управляет РБО).${CAS?" <b>В эту частную копию перевод Кассиана включён для личных занятий</b>; на публичном сайте его нет.":" На публичный сайт они не включены; оба доступны на bible.by и azbyka.ru."}</p>
   <h3>Словари и грамматики</h3><ul>
    <li><b>Старославянский словарь (по рукописям X–XI вв.)</b>, ред. Р. М. Цейтлин, Р. Вечерка, Э. Благова (1994): лучший однотомник для русскоязычного читателя, с греческими параллелями.</li>
-   <li><b>Gorazd</b> (gorazd.org): цифровой «Slovník jazyka staroslověnského» (Прага), ~19 000 статей, с русскими, греческими и латинскими эквивалентами.</li>
-   <li><b>Miklosich, Lexicon palaeoslovenico-graeco-latinum</b> (1862–65): общественное достояние, сканы на archive.org.</li>
-   <li>Грамматики: <b>Хабургаев</b> «Старославянский язык»; <b>Ремнёва</b> «Старославянский язык»; <b>Селищев</b>; по-английски — <b>Lunt</b>, <i>Old Church Slavonic Grammar</i>.</li>
-   <li>Греческий: <b>Дворецкий</b> «Древнегреческо-русский словарь»; BDAG; здесь используется свободный словарь <b>Dodson</b> с номерами Стронга.</li></ul>
+   <li><b>Slovník jazyka staroslověnského</b> (SJS, Прага, 1958–1997) — самый полный словарь старославянского языка, с греческими, латинскими и русскими эквивалентами; поиск на <b>Gorazd</b> (gorazd.org).</li>
+   <li><b>Miklosich, Lexicon palaeoslovenico-graeco-latinum</b> (1862–65): общественное достояние; цифровое издание на CLARIN.SI.</li>
+   <li>Грамматики:
+     <ul>
+       <li><b>Хабургаев</b> «Старославянский язык» и <b>Ремнёва</b> «Старославянский язык» — стандартные вузовские учебники; <b>Селищев</b>.</li>
+       <li><b>Поливанова</b> «Старославянский язык. Грамматика. Словари»; английский перевод (Firenze UP, 2023) в открытом доступе.</li>
+       <li>По-английски — <b>Lunt</b>, <i>Old Church Slavonic Grammar</i>.</li>
+       <li>Бесплатный курс: <b>Old Church Slavonic Online</b> (Техасский университет): уроки на подлинных текстах, с глоссарием.</li>
+     </ul></li>
+   <li>Греческий: <b>Дворецкий</b> «Древнегреческо-русский словарь» и <b>LSJ</b> (через Logeion) — ссылки у каждого греческого слова; стандартный словарь НЗ — <b>BDAG</b> (платный). Краткие английские глоссы — из свободного словаря <b>Dodson</b>.</li></ul>
   <h3>Как устроены подсказки</h3>
-  <p>Разбор форм не угадывается программой: каждая словоформа размечена вручную в PROIEL. Пояснения во вкладке «Разбор» строятся по этим признакам. «Формы» показывает парадигму, собранную из реально встреченных в Евангелиях форм. «Образец склонения» подбирается автоматически и помечен как вероятный. Русские глоссы составлены для всех 2 893 нарицательных лемм Евангелий; ⚠ отмечает ложных друзей переводчика (<i>животъ</i> «жизнь», <i>година</i> «час»).</p>
+  <p>Разбор форм не угадывается программой: каждая словоформа размечена вручную в PROIEL. Пояснения во вкладке «Разбор» строятся по этим признакам. «Формы» показывает парадигму, собранную из реально встреченных в Евангелиях форм. «Образец склонения» подбирается автоматически и помечен как вероятный. Русские глоссы для всех 2 893 нарицательных лемм составлены для этой читалки и сверены с греческими соответствиями; это подсказка при чтении, а не словарь — точные значения смотрите в SJS; ⚠ отмечает ложных друзей переводчика (<i>животъ</i> «жизнь», <i>година</i> «час»).</p>
   <h3>Цитирование</h3>
   <p class="muted">Haug, D. T. T. &amp; Jøhndal, M. L. 2008. Creating a Parallel Treebank of the Old Indo-European Bible Translations. LaTeCH 2008. Данные: github.com/syntacticus/syntacticus-treebank-data. Только для некоммерческого использования.</p>`);
   latinTree($("#aboutBody"));
